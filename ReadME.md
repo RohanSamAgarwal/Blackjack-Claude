@@ -25,4 +25,4 @@ Years later, I decided to revisit the idea, but this time with a twist: I'd use 
 
 What took me almost a month in C took about 3 hours with Claude — and the end result has animated graphics, sound, AI players, and features I never would have attempted on my own. It's a pretty striking example of how AI tools are changing what's possible for a solo developer. I described what I wanted in plain English, iterated on the design visually, and Claude handled the implementation.
 
-[**Play Blackjack →**](https://YOUR-USERNAME.github.io/blackjack/blackjack.html)
+[**Play Blackjack →**](https://rohansamagarwal.github.io/Blackjack-Claude/blackjack.html)
