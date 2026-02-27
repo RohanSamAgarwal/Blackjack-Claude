@@ -1,78 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Blackjack</title>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body,#root{width:100%;height:100%;overflow:hidden;background:#060e0a;}
-@keyframes cardIn{0%{transform:translateX(80px) translateY(-60px) rotate(18deg) scale(.3);opacity:0;filter:blur(3px);}40%{opacity:1;filter:blur(0);}70%{transform:translateX(-2px) translateY(1px) rotate(-1deg) scale(1.02);}100%{transform:none;opacity:1;}}
-@keyframes chipDrop{0%{transform:translateY(-50px) scale(.3) rotate(-15deg);opacity:0;}40%{opacity:1;}65%{transform:translateY(4px) scale(1.05) rotate(2deg);}82%{transform:translateY(-1px) scale(.98);}100%{transform:none;opacity:1;}}
-@keyframes winGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(39,174,96,.3));}50%{filter:drop-shadow(0 0 18px rgba(39,174,96,.7));}}
-@keyframes resultPop{0%{transform:scale(0) rotate(-8deg);opacity:0;}60%{transform:scale(1.15) rotate(2deg);opacity:1;}100%{transform:scale(1) rotate(0);opacity:1;}}
-@keyframes tipIn{0%{opacity:0;transform:translateX(-50%) translateY(10px);}100%{opacity:1;transform:translateX(-50%) translateY(0);}}
-@keyframes fadeUp{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
-@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
-@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
-@keyframes seatGlow{0%,100%{box-shadow:0 0 12px rgba(241,196,15,.2),inset 0 0 12px rgba(241,196,15,.05);}50%{box-shadow:0 0 24px rgba(241,196,15,.5),inset 0 0 20px rgba(241,196,15,.1);}}
-@keyframes shuffleOverlayIn{0%{opacity:0;}100%{opacity:1;}}
-@keyframes shuffleOverlayOut{0%{opacity:1;}100%{opacity:0;}}
-@keyframes shuffleCard1{0%{transform:translate(-200px,100px) rotate(-30deg) scale(.7);opacity:0;}10%{opacity:1;}30%{transform:translate(40px,-20px) rotate(15deg) scale(1);}50%{transform:translate(-30px,30px) rotate(-10deg) scale(.95);}70%{transform:translate(20px,-10px) rotate(5deg) scale(1);}90%{transform:translate(0,0) rotate(0) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleCard2{0%{transform:translate(200px,80px) rotate(25deg) scale(.7);opacity:0;}10%{opacity:1;}30%{transform:translate(-50px,-30px) rotate(-20deg) scale(1);}50%{transform:translate(30px,20px) rotate(10deg) scale(.95);}70%{transform:translate(-20px,-5px) rotate(-5deg) scale(1);}90%{transform:translate(0,0) rotate(0) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleCard3{0%{transform:translate(0,200px) rotate(40deg) scale(.6);opacity:0;}15%{opacity:1;}35%{transform:translate(60px,-40px) rotate(-25deg) scale(1.05);}55%{transform:translate(-40px,10px) rotate(12deg) scale(.9);}75%{transform:translate(15px,-5px) rotate(-3deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleCard4{0%{transform:translate(-150px,-150px) rotate(-45deg) scale(.6);opacity:0;}12%{opacity:1;}40%{transform:translate(50px,30px) rotate(20deg) scale(1.05);}60%{transform:translate(-20px,-15px) rotate(-8deg) scale(.95);}80%{transform:translate(5px,5px) rotate(2deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleCard5{0%{transform:translate(180px,-120px) rotate(35deg) scale(.5);opacity:0;}15%{opacity:1;}35%{transform:translate(-70px,50px) rotate(-30deg) scale(1.1);}55%{transform:translate(25px,-20px) rotate(15deg) scale(.9);}75%{transform:translate(-10px,8px) rotate(-4deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleCard6{0%{transform:translate(0,-200px) rotate(-50deg) scale(.5);opacity:0;}18%{opacity:1;}38%{transform:translate(-45px,60px) rotate(22deg) scale(1);}58%{transform:translate(35px,-25px) rotate(-12deg) scale(.95);}78%{transform:translate(-8px,5px) rotate(3deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
-@keyframes shuffleFan{0%{transform:rotate(0deg);}50%{transform:rotate(8deg);}100%{transform:rotate(0deg);}}
-@keyframes shuffleRiffle{0%,100%{transform:translateY(0) scaleY(1);}25%{transform:translateY(-8px) scaleY(1.04);}50%{transform:translateY(2px) scaleY(.98);}75%{transform:translateY(-3px) scaleY(1.01);}}
-@keyframes shuffleTextPulse{0%,100%{opacity:.6;letter-spacing:8px;}50%{opacity:1;letter-spacing:14px;}}
-@keyframes shuffleProgressFill{0%{width:0%;}100%{width:100%;}}.fs-btn{position:fixed;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,.7);color:#d4af37;border:1.5px solid rgba(212,175,55,.4);border-radius:10px;padding:8px 16px;font-size:16px;cursor:pointer;font-family:'Georgia',serif;letter-spacing:2;transition:all .2s;}
-.fs-btn:hover{background:rgba(212,175,55,.2);transform:scale(1.05);}
-</style>
-</head>
-<body>
-<button class="fs-btn" id="fsBtn" onclick="toggleFS()">⛶ Fullscreen</button>
-<div id="root"></div>
+import { useState, useEffect, useRef, useCallback } from "react";
 
-<script>
-var inIframe=window.self!==window.top;
-function toggleFS(){
-  if(inIframe){
-    /* Inside Google Sites iframe — fullscreen API won't work, open in own tab */
-    window.open(window.location.href,'_blank');
-    return;
-  }
-  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
-    var el=document.documentElement;
-    if(el.requestFullscreen)el.requestFullscreen().catch(function(){window.open(window.location.href,'_blank');});
-    else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
-    else window.open(window.location.href,'_blank');
-    document.getElementById('fsBtn').textContent='✕ Exit Fullscreen';
-  }else{
-    if(document.exitFullscreen)document.exitFullscreen();
-    else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
-    document.getElementById('fsBtn').textContent='⛶ Fullscreen';
-  }
-}
-document.addEventListener('fullscreenchange',function(){
-  if(!document.fullscreenElement)document.getElementById('fsBtn').textContent='⛶ Fullscreen';
-});
-document.addEventListener('webkitfullscreenchange',function(){
-  if(!document.webkitFullscreenElement)document.getElementById('fsBtn').textContent='⛶ Fullscreen';
-});
-/* Update button label if in iframe */
-if(inIframe)document.getElementById('fsBtn').textContent='↗ Open Fullscreen';
-</script>
-
-<script type="text/babel">
-const {useState,useEffect,useRef,useCallback}=React;
-
-/* CONSTANTS */
+/* ═══════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════ */
 const SUITS=["♠","♥","♦","♣"], RANKS=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 const SUIT_CLR={"♠":"#1a1a2e","♣":"#1a1a2e","♥":"#c0392b","♦":"#c0392b"};
 const CHIPS=[1,5,10,25,50,100];
@@ -89,7 +19,9 @@ const AI_NAMES=["Lucky Lou","Risky Rita","Cool Carl","Wild Wanda","Steady Steve"
 const AI_SKILL=["beginner","basic_strategy","aggressive"];
 const TIPS={Hit:"Draw one more card to try to get closer to 21.",Stand:"Keep your current cards and end your turn.",Double:"Double your bet and receive exactly one more card.",Split:"Split your pair into two hands, each with its own bet.",Surrender:"Give up this hand and get half your bet back."};
 
-/* SOUND ENGINE */
+/* ═══════════════════════════════════════════════
+   SOUND ENGINE
+   ═══════════════════════════════════════════════ */
 class SFX{
   constructor(){this.c=null;this.on=true;}
   init(){if(!this.c)this.c=new(window.AudioContext||window.webkitAudioContext)();if(this.c.state==="suspended")this.c.resume();}
@@ -106,7 +38,9 @@ class SFX{
 }
 const S=new SFX();
 
-/* HELPERS */
+/* ═══════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════ */
 function mkShoe(n){const s=[];for(let d=0;d<n;d++)for(const su of SUITS)for(const r of RANKS)s.push({rank:r,suit:su});for(let i=s.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[s[i],s[j]]=[s[j],s[i]];}return s;}
 function cv(c){if("JQK".includes(c.rank))return 10;return c.rank==="A"?11:+c.rank;}
 function hv(cards){let v=0,a=0;for(const c of cards){v+=cv(c);if(c.rank==="A")a++;}while(v>21&&a>0){v-=10;a--;}return v;}
@@ -124,7 +58,37 @@ function getAdvice(hand,up){
 function aiDec(h,up,sk){const v=hv(h.cards),s=isSoft(h.cards),d=cv(up);if(sk==="beginner"){if(v<15)return"hit";if(v>=17)return"stand";return Math.random()>.5?"hit":"stand";}if(sk==="aggressive"){if(h.cards.length===2&&v>=9&&v<=12)return"double";if(v<16)return"hit";if(v===16&&d>=7)return"hit";if(v===17&&s)return"hit";return"stand";}if(s){if(v<=17)return h.cards.length===2&&v>=15&&d>=4&&d<=6?"double":"hit";if(v===18){if(d>=9)return"hit";if(d>=3&&d<=6&&h.cards.length===2)return"double";return"stand";}return"stand";}if(v<=8)return"hit";if(v===9)return h.cards.length===2&&d>=3&&d<=6?"double":"hit";if(v===10)return h.cards.length===2&&d<=9?"double":"hit";if(v===11)return h.cards.length===2?"double":"hit";if(v===12)return d>=4&&d<=6?"stand":"hit";if(v>=13&&v<=16)return d<=6?"stand":"hit";return"stand";}
 function aiBet(sk,b){const m=Math.min(b,MAX_BET);if(m<MIN_BET)return 0;if(sk==="beginner")return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*3)*5+5,m));if(sk==="aggressive")return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*6)*10+10,m));return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*4)*5+10,m));}
 
-/* COMPONENTS */
+/* ═══════════════════════════════════════════════
+   CSS
+   ═══════════════════════════════════════════════ */
+const CSS=`
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+@keyframes cardIn{0%{transform:translateX(80px) translateY(-60px) rotate(18deg) scale(.3);opacity:0;filter:blur(3px);}40%{opacity:1;filter:blur(0);}70%{transform:translateX(-2px) translateY(1px) rotate(-1deg) scale(1.02);}100%{transform:none;opacity:1;}}
+@keyframes chipDrop{0%{transform:translateY(-50px) scale(.3) rotate(-15deg);opacity:0;}40%{opacity:1;}65%{transform:translateY(4px) scale(1.05) rotate(2deg);}82%{transform:translateY(-1px) scale(.98);}100%{transform:none;opacity:1;}}
+@keyframes winGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(39,174,96,.3));}50%{filter:drop-shadow(0 0 18px rgba(39,174,96,.7));}}
+@keyframes resultPop{0%{transform:scale(0) rotate(-8deg);opacity:0;}60%{transform:scale(1.15) rotate(2deg);opacity:1;}100%{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes tipIn{0%{opacity:0;transform:translateX(-50%) translateY(10px);}100%{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+@keyframes seatGlow{0%,100%{box-shadow:0 0 12px rgba(241,196,15,.2),inset 0 0 12px rgba(241,196,15,.05);}50%{box-shadow:0 0 24px rgba(241,196,15,.5),inset 0 0 20px rgba(241,196,15,.1);}}
+@keyframes shuffleOverlayIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes shuffleCard1{0%{transform:translate(-200px,100px) rotate(-30deg) scale(.7);opacity:0;}10%{opacity:1;}30%{transform:translate(40px,-20px) rotate(15deg) scale(1);}50%{transform:translate(-30px,30px) rotate(-10deg) scale(.95);}70%{transform:translate(20px,-10px) rotate(5deg) scale(1);}90%{transform:translate(0,0) rotate(0) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleCard2{0%{transform:translate(200px,80px) rotate(25deg) scale(.7);opacity:0;}10%{opacity:1;}30%{transform:translate(-50px,-30px) rotate(-20deg) scale(1);}50%{transform:translate(30px,20px) rotate(10deg) scale(.95);}70%{transform:translate(-20px,-5px) rotate(-5deg) scale(1);}90%{transform:translate(0,0) rotate(0) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleCard3{0%{transform:translate(0,200px) rotate(40deg) scale(.6);opacity:0;}15%{opacity:1;}35%{transform:translate(60px,-40px) rotate(-25deg) scale(1.05);}55%{transform:translate(-40px,10px) rotate(12deg) scale(.9);}75%{transform:translate(15px,-5px) rotate(-3deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleCard4{0%{transform:translate(-150px,-150px) rotate(-45deg) scale(.6);opacity:0;}12%{opacity:1;}40%{transform:translate(50px,30px) rotate(20deg) scale(1.05);}60%{transform:translate(-20px,-15px) rotate(-8deg) scale(.95);}80%{transform:translate(5px,5px) rotate(2deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleCard5{0%{transform:translate(180px,-120px) rotate(35deg) scale(.5);opacity:0;}15%{opacity:1;}35%{transform:translate(-70px,50px) rotate(-30deg) scale(1.1);}55%{transform:translate(25px,-20px) rotate(15deg) scale(.9);}75%{transform:translate(-10px,8px) rotate(-4deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleCard6{0%{transform:translate(0,-200px) rotate(-50deg) scale(.5);opacity:0;}18%{opacity:1;}38%{transform:translate(-45px,60px) rotate(22deg) scale(1);}58%{transform:translate(35px,-25px) rotate(-12deg) scale(.95);}78%{transform:translate(-8px,5px) rotate(3deg) scale(1);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes shuffleFan{0%{transform:rotate(0deg);}50%{transform:rotate(8deg);}100%{transform:rotate(0deg);}}
+@keyframes shuffleRiffle{0%,100%{transform:translateY(0) scaleY(1);}25%{transform:translateY(-8px) scaleY(1.04);}50%{transform:translateY(2px) scaleY(.98);}75%{transform:translateY(-3px) scaleY(1.01);}}
+@keyframes shuffleTextPulse{0%,100%{opacity:.6;letter-spacing:8px;}50%{opacity:1;letter-spacing:14px;}}
+@keyframes shuffleProgressFill{0%{width:0%;}100%{width:100%;}}
+`;
+
+/* ═══════════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════════ */
 function Card({card,faceDown=false,small=false,style={},animated=false,delay=0}){
   const w=small?80:120,h=small?112:170;
   const anim=animated?{animation:`cardIn .5s cubic-bezier(.34,1.56,.64,1) ${delay}s both`}:{};
@@ -186,16 +150,31 @@ function MiniChip({value,size=38,style={}}){
 function BetStack({amount,chips:exactChips,animate=true,style={}}){
   if(amount<=0&&(!exactChips||!exactChips.length))return null;
   let allChips;
-  if(exactChips&&exactChips.length>0){allChips=exactChips;}
-  else{allChips=[];let rem=amount;for(let i=CHIPS.length-1;i>=0;i--)while(rem>=CHIPS[i]){allChips.push(CHIPS[i]);rem-=CHIPS[i];}}
+  if(exactChips&&exactChips.length>0){
+    allChips=exactChips;
+  }else{
+    allChips=[];let rem=amount;for(let i=CHIPS.length-1;i>=0;i--)while(rem>=CHIPS[i]){allChips.push(CHIPS[i]);rem-=CHIPS[i];}
+  }
   const groups=[];const seen={};
-  for(const v of allChips){if(!seen[v]){seen[v]={val:v,count:0,idx:groups.length};groups.push(seen[v]);}seen[v].count++;}
+  for(const v of allChips){
+    if(!seen[v]){seen[v]={val:v,count:0,idx:groups.length};groups.push(seen[v]);}
+    seen[v].count++;
+  }
   let chipIdx=0;
   return (<div style={{display:"flex",gap:5,alignItems:"flex-end",justifyContent:"center",...style}}>
     {groups.map((g)=>{
       const stack=[];
-      for(let i=0;i<Math.min(g.count,8);i++){const ci=chipIdx++;stack.push(<MiniChip key={ci} value={g.val} size={38} style={{position:i>0?"absolute":"relative",bottom:i>0?i*5:undefined,left:i>0?0:undefined,animation:animate?`chipDrop .35s cubic-bezier(.34,1.56,.64,1) ${ci*.04}s both`:"none",zIndex:i}}/>);}
-      return (<div key={g.val} style={{position:"relative",display:"flex",flexDirection:"column-reverse",alignItems:"center",width:38,height:Math.min(g.count,8)*5+38}}>
+      for(let i=0;i<Math.min(g.count,8);i++){
+        const ci=chipIdx++;
+        stack.push(<MiniChip key={ci} value={g.val} size={38} style={{
+          position:i>0?"absolute":"relative",
+          bottom:i>0?i*5:undefined,left:i>0?0:undefined,
+          animation:animate?`chipDrop .35s cubic-bezier(.34,1.56,.64,1) ${ci*.04}s both`:"none",
+          zIndex:i,
+        }}/>);
+      }
+      return (<div key={g.val} style={{position:"relative",display:"flex",flexDirection:"column-reverse",alignItems:"center",
+        width:38,height:Math.min(g.count,8)*5+38}}>
         {stack}
         {g.count>1&&<div style={{position:"absolute",top:-14,fontSize:14,color:"#f5d76e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.9)",zIndex:20}}>×{g.count}</div>}
       </div>);
@@ -203,54 +182,133 @@ function BetStack({amount,chips:exactChips,animate=true,style={}}){
   </div>);
 }
 
+/* ═══════════════════════════════════════════════
+   BETTING CIRCLE — the key visual element
+   ═══════════════════════════════════════════════ */
 function BettingCircle({player,hand,handIdx,isActive,isHuman,dealerCards,showHole,phase,betChips}){
   const cards=hand.cards, val=hv(cards), bet=hand.bet, result=hand.result;
   const bj=isBJ(cards)&&!hand.isSplit;
   const won=result==="WIN"||result==="BLACKJACK";
   const circleSize=isHuman?130:100;
   const useBetChips=(betChips&&betChips.length>0&&phase===1)?betChips:null;
+
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:isHuman?160:120}}>
-      {result&&(<div style={{fontSize:isHuman?22:17,fontWeight:"bold",padding:"5px 18px",borderRadius:12,letterSpacing:2,background:won?"linear-gradient(135deg,#27ae60,#2ecc71)":result==="PUSH"?"linear-gradient(135deg,#f39c12,#e67e22)":result==="SURRENDER"?"linear-gradient(135deg,#8e44ad,#9b59b6)":"linear-gradient(135deg,#c0392b,#e74c3c)",color:"#fff",animation:"resultPop .5s cubic-bezier(.34,1.56,.64,1) both",boxShadow:won?"0 3px 18px rgba(39,174,96,.4)":"0 3px 10px rgba(0,0,0,.3)"}}>{result}{result==="BLACKJACK"?" 🎉":""}</div>)}
-      {cards.length>0&&(<div style={{fontSize:isHuman?26:20,fontWeight:"bold",color:val>21?"#e74c3c":"#fff",background:val>21?"rgba(192,57,43,.7)":"rgba(0,0,0,.6)",padding:"4px 16px",borderRadius:12,animation:"fadeUp .3s ease both",animationDelay:".2s",letterSpacing:2}}>{bj?"BJ! 🃏":val>21?`BUST ${val}`:val}</div>)}
-      {cards.length>0&&(<div style={{display:"flex",justifyContent:"center",marginBottom:-6,animation:won?"winGlow 1.5s ease-in-out infinite":"none"}}>{hand.cards.map((c,i)=>(<Card key={`${c.rank}${c.suit}${i}`} card={c} small={!isHuman} animated delay={i*.1} style={{marginLeft:i>0?(isHuman?-22:-16):0,zIndex:i,position:"relative"}}/>))}</div>)}
-      <div style={{width:circleSize,height:circleSize,borderRadius:"50%",position:"relative",border:isActive?`4px solid rgba(241,196,15,.8)`:`3px solid rgba(212,175,55,.3)`,background:isActive?"rgba(241,196,15,.08)":"rgba(0,0,0,.2)",boxShadow:isActive?"0 0 24px rgba(241,196,15,.3),inset 0 0 16px rgba(241,196,15,.08)":"inset 0 3px 8px rgba(0,0,0,.3)",animation:isActive?"seatGlow 1.5s ease-in-out infinite":"none",display:"flex",alignItems:"center",justifyContent:"center",overflow:"visible",transition:"all .3s"}}>
+      {/* RESULT BADGE */}
+      {result&&(
+        <div style={{fontSize:isHuman?22:17,fontWeight:"bold",padding:"5px 18px",borderRadius:12,letterSpacing:2,
+          background:won?"linear-gradient(135deg,#27ae60,#2ecc71)":result==="PUSH"?"linear-gradient(135deg,#f39c12,#e67e22)":result==="SURRENDER"?"linear-gradient(135deg,#8e44ad,#9b59b6)":"linear-gradient(135deg,#c0392b,#e74c3c)",
+          color:"#fff",animation:"resultPop .5s cubic-bezier(.34,1.56,.64,1) both",
+          boxShadow:won?"0 3px 18px rgba(39,174,96,.4)":"0 3px 10px rgba(0,0,0,.3)"}}>
+          {result}{result==="BLACKJACK"?" 🎉":""}
+        </div>
+      )}
+
+      {/* HAND VALUE */}
+      {cards.length>0&&(
+        <div style={{fontSize:isHuman?26:20,fontWeight:"bold",color:val>21?"#e74c3c":"#fff",
+          background:val>21?"rgba(192,57,43,.7)":"rgba(0,0,0,.6)",padding:"4px 16px",borderRadius:12,
+          animation:"fadeUp .3s ease both",animationDelay:".2s",letterSpacing:2}}>
+          {bj?"BJ! 🃏":val>21?`BUST ${val}`:val}
+        </div>
+      )}
+
+      {/* CARDS */}
+      {cards.length>0&&(
+        <div style={{display:"flex",justifyContent:"center",marginBottom:-6,animation:won?"winGlow 1.5s ease-in-out infinite":"none"}}>
+          {hand.cards.map((c,i)=>(
+            <Card key={`${c.rank}${c.suit}${i}`} card={c} small={!isHuman} animated delay={i*.1}
+              style={{marginLeft:i>0?(isHuman?-22:-16):0,zIndex:i,position:"relative"}}/>
+          ))}
+        </div>
+      )}
+
+      {/* BETTING CIRCLE */}
+      <div style={{width:circleSize,height:circleSize,borderRadius:"50%",position:"relative",
+        border:isActive?`4px solid rgba(241,196,15,.8)`:`3px solid rgba(212,175,55,.3)`,
+        background:isActive?"rgba(241,196,15,.08)":"rgba(0,0,0,.2)",
+        boxShadow:isActive?"0 0 24px rgba(241,196,15,.3),inset 0 0 16px rgba(241,196,15,.08)":"inset 0 3px 8px rgba(0,0,0,.3)",
+        animation:isActive?"seatGlow 1.5s ease-in-out infinite":"none",
+        display:"flex",alignItems:"center",justifyContent:"center",
+        overflow:"visible",transition:"all .3s"}}>
         <div style={{position:"absolute",inset:7,borderRadius:"50%",border:"1.5px solid rgba(212,175,55,.15)"}}/>
-        {bet>0?(<BetStack amount={bet} chips={useBetChips} animate={true}/>):(<span style={{fontSize:isHuman?16:12,color:"rgba(212,175,55,.3)",textTransform:"uppercase",letterSpacing:2,fontFamily:"'Georgia',serif",textAlign:"center",lineHeight:1.2}}>{isHuman?"BET":""}</span>)}
+        {bet>0 ? (
+          <BetStack amount={bet} chips={useBetChips} animate={true}/>
+        ) : (
+          <span style={{fontSize:isHuman?16:12,color:"rgba(212,175,55,.3)",textTransform:"uppercase",letterSpacing:2,fontFamily:"'Georgia',serif",textAlign:"center",lineHeight:1.2}}>
+            {isHuman?"BET":""}
+          </span>
+        )}
       </div>
-      {handIdx!==undefined&&handIdx>=0&&(<div style={{fontSize:15,color:"rgba(212,175,55,.5)",letterSpacing:2}}>Hand {handIdx+1}</div>)}
-    </div>);
+
+      {handIdx!==undefined&&handIdx>=0&&(
+        <div style={{fontSize:15,color:"rgba(212,175,55,.5)",letterSpacing:2}}>Hand {handIdx+1}</div>
+      )}
+    </div>
+  );
 }
 
+/* ═══════════════════════════════════════════════
+   PLAYER SEAT — contains name, balance, circles
+   ═══════════════════════════════════════════════ */
 function PlayerSeat({player,pi,activePI,activeHI,phase,dealerCards,showHole,betChips}){
   const isHuman=player.isHuman;
-  const isMyTurn=phase===3&&pi===activePI;
+  const isMyTurn=phase===3&&pi===activePI; // PH.PLAY=3
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      {/* Hands (usually 1, 2 if split) */}
       <div style={{display:"flex",gap:isHuman?16:10,alignItems:"flex-end"}}>
-        {player.hands.map((hand,hi)=>(<BettingCircle key={hi} player={player} hand={hand} handIdx={player.hands.length>1?hi:undefined} isActive={isMyTurn&&hi===activeHI} isHuman={isHuman} dealerCards={dealerCards} showHole={showHole} phase={phase} betChips={isHuman&&hi===0?betChips:null}/>))}
+        {player.hands.map((hand,hi)=>(
+          <BettingCircle key={hi} player={player} hand={hand}
+            handIdx={player.hands.length>1?hi:undefined}
+            isActive={isMyTurn&&hi===activeHI}
+            isHuman={isHuman} dealerCards={dealerCards} showHole={showHole} phase={phase}
+            betChips={isHuman&&hi===0?betChips:null}/>
+        ))}
       </div>
+      {/* Name plate below */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginTop:4}}>
-        <div style={{fontSize:isHuman?18:15,fontWeight:"bold",color:isHuman?"#f5d76e":"#a0a080",letterSpacing:2,textTransform:"uppercase",textShadow:"0 2px 6px rgba(0,0,0,.8)",whiteSpace:"nowrap",background:"rgba(0,0,0,.35)",padding:"4px 14px",borderRadius:10}}>
+        <div style={{fontSize:isHuman?18:15,fontWeight:"bold",color:isHuman?"#f5d76e":"#a0a080",letterSpacing:2,textTransform:"uppercase",
+          textShadow:"0 2px 6px rgba(0,0,0,.8)",whiteSpace:"nowrap",
+          background:"rgba(0,0,0,.35)",padding:"4px 14px",borderRadius:10}}>
           {player.name}
           {!isHuman&&<span style={{fontSize:14,marginLeft:5,opacity:.6}}>({player.skill==="beginner"?"🎲":player.skill==="aggressive"?"🔥":"📊"})</span>}
         </div>
         <div style={{fontSize:16,color:"#8a9a6e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.8)"}}>{player.hands.reduce((s,h)=>s+h.bet,0)>0?`Bet: $${player.hands.reduce((s,h)=>s+h.bet,0)}`:""}</div>
       </div>
-    </div>);
+    </div>
+  );
 }
 
+/* ═══════════════════════════════════════════════
+   ACTION BUTTON + TOOLTIP
+   ═══════════════════════════════════════════════ */
 function ActBtn({label,onClick,color,disabled=false}){
   const [hov,setH]=useState(false);
   return (
-    <button onClick={onClick} disabled={disabled} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
-      style={{position:"relative",overflow:"visible",padding:"14px 34px",fontSize:22,fontWeight:"bold",letterSpacing:3,background:disabled?"rgba(255,255,255,.04)":`linear-gradient(180deg,${color},${color}cc)`,color:disabled?"#555":"#fff",border:"none",borderRadius:16,cursor:disabled?"not-allowed":"pointer",fontFamily:"'Georgia',serif",textTransform:"uppercase",opacity:disabled?.3:1,transition:"transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s",boxShadow:disabled?"none":`0 4px 16px ${color}55`,transform:hov&&!disabled?"translateY(-3px) scale(1.05)":"none",minWidth:110,minHeight:58}}>
+    <button onClick={onClick} disabled={disabled}
+      onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{
+        position:"relative",overflow:"visible",
+        padding:"14px 34px",fontSize:22,fontWeight:"bold",letterSpacing:3,
+        background:disabled?"rgba(255,255,255,.04)":`linear-gradient(180deg,${color},${color}cc)`,
+        color:disabled?"#555":"#fff",border:"none",borderRadius:16,cursor:disabled?"not-allowed":"pointer",
+        fontFamily:"'Georgia',serif",textTransform:"uppercase",opacity:disabled?.3:1,
+        transition:"transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s",
+        boxShadow:disabled?"none":`0 4px 16px ${color}55`,
+        transform:hov&&!disabled?"translateY(-3px) scale(1.05)":"none",minWidth:110,minHeight:58}}>
       {label}
       {hov&&!disabled&&TIPS[label]&&(
-        <div style={{position:"absolute",bottom:"calc(100% + 12px)",left:"50%",marginLeft:-130,background:"rgba(8,8,18,.96)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:16,padding:"14px 22px",width:260,zIndex:90,pointerEvents:"none",boxShadow:"0 12px 40px rgba(0,0,0,.65)",textTransform:"none",letterSpacing:0,fontWeight:"normal"}}>
-          <div style={{position:"absolute",bottom:-9,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:16,height:16,background:"rgba(8,8,18,.96)",borderRight:"1.5px solid rgba(212,175,55,.35)",borderBottom:"1.5px solid rgba(212,175,55,.35)"}}/>
+        <div style={{position:"absolute",bottom:"calc(100% + 12px)",left:"50%",marginLeft:-130,
+          background:"rgba(8,8,18,.96)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:16,
+          padding:"14px 22px",width:260,zIndex:90,pointerEvents:"none",
+          boxShadow:"0 12px 40px rgba(0,0,0,.65)",
+          textTransform:"none",letterSpacing:0,fontWeight:"normal"}}>
+          <div style={{position:"absolute",bottom:-9,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:16,height:16,
+            background:"rgba(8,8,18,.96)",borderRight:"1.5px solid rgba(212,175,55,.35)",borderBottom:"1.5px solid rgba(212,175,55,.35)"}}/>
           <div style={{fontSize:18,color:"#d4c8a0",lineHeight:1.5,textAlign:"center"}}>{TIPS[label]}</div>
-        </div>)}
+        </div>
+      )}
     </button>);
 }
 
@@ -258,7 +316,9 @@ function StratTip({advice,onClose}){
   if(!advice)return null;
   const cm={Hit:"#27ae60",Stand:"#c0392b",Double:"#2980b9",Split:"#8e44ad",Surrender:"#7f8c8d"};const c=cm[advice.a]||"#d4af37";
   return (
-    <div style={{position:"absolute",bottom:"calc(100% + 16px)",left:"50%",transform:"translateX(-50%)",background:"rgba(10,10,20,.97)",border:`2.5px solid ${c}`,borderRadius:18,padding:"20px 28px",minWidth:300,maxWidth:400,zIndex:100,boxShadow:`0 14px 50px rgba(0,0,0,.7),0 0 24px ${c}22`,animation:"fadeUp .2s ease both"}}>
+    <div style={{position:"absolute",bottom:"calc(100% + 16px)",left:"50%",transform:"translateX(-50%)",
+      background:"rgba(10,10,20,.97)",border:`2.5px solid ${c}`,borderRadius:18,padding:"20px 28px",
+      minWidth:300,maxWidth:400,zIndex:100,boxShadow:`0 14px 50px rgba(0,0,0,.7),0 0 24px ${c}22`,animation:"fadeUp .2s ease both"}}>
       <div style={{position:"absolute",bottom:-10,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:18,height:18,background:"rgba(10,10,20,.97)",borderRight:`2.5px solid ${c}`,borderBottom:`2.5px solid ${c}`}}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
         <span style={{fontSize:14,color:"#7a7a6e",textTransform:"uppercase",letterSpacing:4}}>Basic Strategy</span>
@@ -269,10 +329,12 @@ function StratTip({advice,onClose}){
     </div>);
 }
 
-/* MAIN APP */
+/* ═══════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════ */
 const PH={SETUP:0,BET:1,INS:2,PLAY:3,DEALER:4,END:5};
 
-function App(){
+export default function App(){
   const [numDk,setNumDk]=useState(2);
   const [numAI,setNumAI]=useState(2);
   const [phase,setPhase]=useState(PH.SETUP);
@@ -323,10 +385,12 @@ function App(){
 
   function addChip(v){S.init();const nb=betR.current+v;if(nb>Math.min(balR.current,MAX_BET))return;S.chip();setBet(nb);betR.current=nb;
     setBetChips(prev=>[...prev,v]);
-    const np=plsR.current.map(p=>p.isHuman?{...p,hands:[{...p.hands[0],bet:nb}]}:p);setPls(np);
+    const np=plsR.current.map(p=>p.isHuman?{...p,hands:[{...p.hands[0],bet:nb}]}:p);
+    setPls(np);
   }
   function clearBet(){S.btn();setBet(0);betR.current=0;setBetChips([]);
-    const np=plsR.current.map(p=>p.isHuman?{...p,hands:[{...p.hands[0],bet:0}]}:p);setPls(np);
+    const np=plsR.current.map(p=>p.isHuman?{...p,hands:[{...p.hands[0],bet:0}]}:p);
+    setPls(np);
   }
   function repeatBet(){S.init();S.btn();
     const rb=Math.min(lastBet,balR.current,MAX_BET);if(rb<MIN_BET)return;
@@ -478,9 +542,13 @@ function App(){
   const curH=myTurn?humanP?.hands[aHI]:null;
   const advice=curH&&dlr.cards.length>0&&!curH.result?getAdvice(curH,dlr.cards[0]):null;
 
-  /* SETUP SCREEN */
+  /* ═══════════════════════════════════════════════
+     SETUP SCREEN
+     ═══════════════════════════════════════════════ */
   if(phase===PH.SETUP) return (
-    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"radial-gradient(ellipse at center,#1a3a2a,#0d1f17 50%,#060e0a)",fontFamily:"'Georgia',serif",color:"#d4af37",padding:24,overflow:"auto"}}>
+    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      background:"radial-gradient(ellipse at center,#1a3a2a,#0d1f17 50%,#060e0a)",fontFamily:"'Georgia',serif",color:"#d4af37",padding:24,overflow:"auto"}}>
+      <style>{CSS}</style>
       <div style={{textAlign:"center",maxWidth:600,width:"100%",background:"rgba(0,0,0,.45)",borderRadius:28,padding:"48px 48px",border:"2px solid rgba(212,175,55,.3)",boxShadow:"0 24px 80px rgba(0,0,0,.7)"}}>
         <div style={{fontSize:24,letterSpacing:10,marginBottom:8,color:"#b8972e"}}>♠ ♥ ♦ ♣</div>
         <h1 style={{fontSize:62,margin:"0 0 4px",fontFamily:"'Playfair Display',Georgia,serif",color:"#f5d76e",textShadow:"0 3px 16px rgba(245,215,110,.35)",letterSpacing:5}}>BLACKJACK</h1>
@@ -506,15 +574,19 @@ function App(){
       </div>
     </div>);
 
-  /* GAME TABLE */
+  /* ═══════════════════════════════════════════════
+     GAME TABLE — realistic blackjack layout
+     ═══════════════════════════════════════════════ */
   const dlrVal=hole?hv(dlr.cards):(dlr.cards.length>0?cv(dlr.cards[0]):0);
   const dlrBJ=hole&&isBJ(dlr.cards);
 
   return (
-    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",background:"#0a1008",fontFamily:"'Georgia',serif",color:"#e8e0c8",overflow:"hidden"}}>
+    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",
+      background:"#0a1008",fontFamily:"'Georgia',serif",color:"#e8e0c8",overflow:"hidden"}}>
+      <style>{CSS}</style>
 
       {/* TOP BAR */}
-      <div style={{display:"flex",alignItems:"center",flexWrap:"wrap",padding:"8px 20px",paddingRight:160,background:"rgba(0,0,0,.7)",borderBottom:"2px solid #2a1a0a",flexShrink:0,gap:18}}>
+      <div style={{display:"flex",alignItems:"center",flexWrap:"wrap",padding:"8px 20px",background:"rgba(0,0,0,.7)",borderBottom:"2px solid #2a1a0a",flexShrink:0,gap:18}}>
           <span style={{color:"#d4af37",fontWeight:"bold",fontSize:26,fontFamily:"'Playfair Display','Georgia',serif",letterSpacing:4}}>♠ BLACKJACK</span>
           <span style={{color:"#8a8a6e",fontSize:18}}>Round {rnd}</span>
           <span style={{color:shoe.length<RESHUFFLE+10&&shoe.length>0?"#e67e22":"#8a8a6e",fontSize:18}}>{shoe.length} cards{shoe.length>0&&shoe.length<RESHUFFLE+10?" ⚠":""}</span>
@@ -524,8 +596,9 @@ function App(){
           <button onClick={()=>{S.btn();setPhase(PH.SETUP);}} style={{padding:"8px 18px",fontSize:18,background:"rgba(255,255,255,.08)",color:"#8a8a6e",border:"1.5px solid rgba(255,255,255,.12)",borderRadius:12,cursor:"pointer",minHeight:46}}>New Game</button>
       </div>
 
-      {/* TABLE FELT */}
+      {/* TABLE FELT — semicircle: flat edge at top (dealer), curved bottom (players) */}
       <div style={{flex:1,position:"relative",overflow:"hidden"}}>
+        {/* SVG table — semicircle opening downward */}
         <svg viewBox="0 0 1000 620" preserveAspectRatio="none" style={{position:"absolute",inset:0,width:"100%",height:"100%"}}>
           <defs>
             <radialGradient id="feltG" cx="50%" cy="0%" r="100%">
@@ -536,17 +609,26 @@ function App(){
               <stop offset="100%" stopColor="#082e16"/>
             </radialGradient>
           </defs>
+          {/* Wood surround */}
           <path d="M 20,-10 L 980,-10 A 480,560 0 0,1 20,-10 Z" fill="#1a1008" stroke="#4d3a1a" strokeWidth="3"/>
           <path d="M 28,-4 L 972,-4 A 472,550 0 0,1 28,-4 Z" fill="#2a1a0a" stroke="#3d2a14" strokeWidth="2"/>
+          {/* Green felt */}
           <path d="M 40,0 L 960,0 A 460,540 0 0,1 40,0 Z" fill="url(#feltG)"/>
+          {/* Decorative gold border inside felt */}
           <path d="M 70,6 L 930,6 A 430,510 0 0,1 70,6 Z" fill="none" stroke="rgba(241,210,65,0.16)" strokeWidth="1.5" strokeDasharray="10 7"/>
+          {/* Insurance arc */}
           <path d="M 180,120 A 340,360 0 0,1 820,120" fill="none" stroke="rgba(241,210,65,0.12)" strokeWidth="1.5"/>
+          {/* Table text — centered in gap between dealer and player arc */}
           <text x="500" y="195" textAnchor="middle" fill="rgba(241,210,65,0.3)" fontSize="22" fontFamily="Playfair Display,Georgia,serif" letterSpacing="8">BLACKJACK PAYS 3 TO 2</text>
           <text x="500" y="222" textAnchor="middle" fill="rgba(241,210,65,0.2)" fontSize="13" fontFamily="Georgia,serif" letterSpacing="4">DEALER MUST HIT SOFT 17</text>
           <text x="500" y="250" textAnchor="middle" fill="rgba(241,210,65,0.2)" fontSize="13" fontFamily="Georgia,serif" letterSpacing="5">INSURANCE PAYS 2 TO 1</text>
         </svg>
 
-        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:5,textAlign:"center",padding:"10px 20px",fontSize:24,color:"#f5d76e",fontWeight:"bold",letterSpacing:3}}>{msg}</div>
+        {/* MESSAGE overlay */}
+        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:5,textAlign:"center",padding:"10px 20px",
+          fontSize:24,color:"#f5d76e",fontWeight:"bold",letterSpacing:3}}>
+          {msg}
+        </div>
 
         {/* CARD COUNTING PANEL */}
         {showCount&&(
@@ -604,29 +686,54 @@ function App(){
           </div>
         )}
 
-        <div style={{position:"absolute",top:"4%",left:"50%",transform:"translateX(-50%)",zIndex:5,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
-          <div style={{fontSize:18,color:"rgba(212,175,55,.45)",letterSpacing:4,textTransform:"uppercase",fontWeight:"bold",background:"rgba(0,0,0,.3)",padding:"4px 20px",borderRadius:10}}>Dealer</div>
-          {dlr.cards.length>0&&(<div style={{display:"flex",justifyContent:"center"}}>{dlr.cards.map((c,i)=>(<Card key={`d${c.rank}${c.suit}${i}`} card={c} faceDown={!hole&&i===1} animated delay={i*.12} style={{marginLeft:i>0?-22:0,zIndex:i,position:"relative"}}/>))}</div>)}
-          {dlr.cards.length>0&&(<span style={{fontSize:24,fontWeight:"bold",color:"#fff",background:"rgba(0,0,0,.55)",padding:"4px 16px",borderRadius:12,letterSpacing:2}}>{hole?(dlrBJ?"BLACKJACK! 🃏":hv(dlr.cards)):`${cv(dlr.cards[0])} + ?`}</span>)}
+        {/* DEALER — at top center, along the flat edge */}
+        <div style={{position:"absolute",top:"4%",left:"50%",transform:"translateX(-50%)",zIndex:5,
+          display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
+          <div style={{fontSize:18,color:"rgba(212,175,55,.45)",letterSpacing:4,textTransform:"uppercase",fontWeight:"bold",
+            background:"rgba(0,0,0,.3)",padding:"4px 20px",borderRadius:10}}>Dealer</div>
+          {dlr.cards.length>0&&(
+            <div style={{display:"flex",justifyContent:"center"}}>
+              {dlr.cards.map((c,i)=>(
+                <Card key={`d${c.rank}${c.suit}${i}`} card={c} faceDown={!hole&&i===1} animated delay={i*.12}
+                  style={{marginLeft:i>0?-22:0,zIndex:i,position:"relative"}}/>
+              ))}
+            </div>
+          )}
+          {dlr.cards.length>0&&(
+            <span style={{fontSize:24,fontWeight:"bold",color:"#fff",background:"rgba(0,0,0,.55)",padding:"4px 16px",borderRadius:12,letterSpacing:2}}>
+              {hole?(dlrBJ?"BLACKJACK! 🃏":hv(dlr.cards)):`${cv(dlr.cards[0])} + ?`}
+            </span>
+          )}
         </div>
 
+        {/* PLAYERS — positioned along the semicircular arc curving around dealer */}
         {pls.map((p,pi)=>{
           const n=pls.length;
-          const startA=210*(Math.PI/180),endA=330*(Math.PI/180);
+          // Arc from 210° (lower-left) through 270° (bottom) to 330° (lower-right)
+          const startA=210*(Math.PI/180);
+          const endA=330*(Math.PI/180);
           const ang=n===1?270*(Math.PI/180):startA+(endA-startA)*(pi/(n-1));
-          const cx=50,cy=5,rx=42,ry=70;
-          const px=cx+rx*Math.cos(ang),py=cy-ry*Math.sin(ang);
+          // Arc center near top (dealer), radius pushes players down and to sides
+          const cx=50, cy=5; // center of arc in %
+          const rx=42, ry=70; // radii in % of container
+          const px=cx+rx*Math.cos(ang);
+          const py=cy-ry*Math.sin(ang); // -sin because CSS Y is inverted vs math
+
           return (
-            <div key={pi} style={{position:"absolute",left:`${px}%`,top:`${py}%`,transform:"translate(-50%,-50%)",zIndex:p.isHuman?10:5}}>
+            <div key={pi} style={{
+              position:"absolute",left:`${px}%`,top:`${py}%`,
+              transform:"translate(-50%,-50%)",
+              zIndex:p.isHuman?10:5,
+            }}>
               <PlayerSeat player={p} pi={pi} activePI={aPI} activeHI={aHI} phase={phase} dealerCards={dlr.cards} showHole={hole} betChips={betChips}/>
-            </div>);
+            </div>
+          );
         })}
       </div>
 
       {/* SHUFFLE ANIMATION OVERLAY */}
       {shuffling&&(
         <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(4,8,4,.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"shuffleOverlayIn .5s ease both"}}>
-          {/* Animated card backs */}
           <div style={{position:"relative",width:300,height:220,marginBottom:30}}>
             {[
               {anim:"shuffleCard1",x:0,y:0,rot:-12,delay:0},
@@ -646,7 +753,6 @@ function App(){
                 <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:28,opacity:.2,color:"#ffd700"}}>♠</div>
               </div>
             ))}
-            {/* Deck pile in center */}
             <div style={{position:"absolute",left:115,top:55,width:90,height:130,animation:"shuffleFan .6s ease-in-out infinite alternate"}}>
               {[0,1,2,3,4].map(i=>(
                 <div key={i} style={{position:"absolute",left:i*1.5,top:-i*1.5,width:90,height:130,borderRadius:10,
@@ -657,8 +763,6 @@ function App(){
               ))}
             </div>
           </div>
-
-          {/* Text */}
           <div style={{fontSize:36,fontWeight:"bold",color:"#d4af37",fontFamily:"'Playfair Display','Georgia',serif",
             letterSpacing:10,animation:"shuffleTextPulse 1.5s ease-in-out infinite",marginBottom:16}}>
             SHUFFLING
@@ -669,8 +773,6 @@ function App(){
           <div style={{fontSize:16,color:"#e67e22",letterSpacing:2,marginBottom:30,animation:"pulse 1s ease-in-out infinite"}}>
             🃏 Card count reset
           </div>
-
-          {/* Progress bar */}
           <div style={{width:280,height:6,background:"rgba(255,255,255,.08)",borderRadius:3,overflow:"hidden"}}>
             <div style={{height:"100%",background:"linear-gradient(90deg,#d4af37,#f5d76e,#d4af37)",borderRadius:3,
               animation:"shuffleProgressFill 4.2s ease-in-out both"}}/>
@@ -680,6 +782,7 @@ function App(){
 
       {/* BOTTOM ACTION BAR */}
       <div style={{padding:"clamp(8px,1.5vh,16px) 20px",background:"linear-gradient(180deg,#1a1008,#0f0a04)",borderTop:"2px solid #2a1a0a",flexShrink:0}}>
+
         {phase===PH.BET&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"clamp(8px,1.2vh,14px)"}}>
             <div style={{display:"flex",gap:"clamp(6px,.8vw,12px)",flexWrap:"wrap",justifyContent:"center"}}>
@@ -691,7 +794,8 @@ function App(){
               {lastBet>0&&<button onClick={repeatBet} disabled={lastBet>Math.min(bal,MAX_BET)} style={{padding:"12px 28px",fontSize:20,fontWeight:"bold",background:lastBet<=Math.min(bal,MAX_BET)?"rgba(212,175,55,.15)":"rgba(255,255,255,.04)",color:lastBet<=Math.min(bal,MAX_BET)?"#d4af37":"#555",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:14,cursor:lastBet<=Math.min(bal,MAX_BET)?"pointer":"not-allowed",minHeight:52,letterSpacing:1}}>🔁 ${lastBet}</button>}
               <button onClick={placeBet} disabled={bet<MIN_BET} style={{padding:"14px 52px",fontSize:26,fontWeight:"bold",letterSpacing:5,background:bet>=MIN_BET?"linear-gradient(180deg,#d4af37,#b8972e)":"rgba(255,255,255,.05)",color:bet>=MIN_BET?"#1a1a0e":"#555",border:"none",borderRadius:16,cursor:bet>=MIN_BET?"pointer":"not-allowed",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",minHeight:58}}>Deal</button>
             </div>
-          </div>)}
+          </div>
+        )}
 
         {phase===PH.INS&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:16}}>
@@ -700,7 +804,8 @@ function App(){
               <button onClick={()=>handleIns(true)} disabled={bal<Math.floor(bet/2)} style={{padding:"14px 40px",fontSize:22,fontWeight:"bold",background:"linear-gradient(180deg,#27ae60,#1e8449)",color:"#fff",border:"none",borderRadius:16,cursor:"pointer",minHeight:56}}>Yes, Insure</button>
               <button onClick={()=>handleIns(false)} style={{padding:"14px 40px",fontSize:22,fontWeight:"bold",background:"rgba(255,255,255,.08)",color:"#ccc",border:"1.5px solid rgba(255,255,255,.15)",borderRadius:16,cursor:"pointer",minHeight:56}}>No Thanks</button>
             </div>
-          </div>)}
+          </div>
+        )}
 
         {phase===PH.PLAY&&myTurn&&curH&&!curH.result&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
@@ -715,7 +820,8 @@ function App(){
               {adv&&advice&&<StratTip advice={advice} onClose={()=>setAdv(false)}/>}
               <button onClick={()=>{S.btn();setAdv(a=>!a);}} style={{padding:"10px 30px",fontSize:20,fontWeight:"bold",background:adv?"rgba(245,215,110,.15)":"rgba(255,255,255,.06)",color:"#d4af37",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:26,cursor:"pointer",letterSpacing:3,transition:"all .25s",minHeight:50}}>💡 What should I do?</button>
             </div>
-          </div>)}
+          </div>
+        )}
 
         {phase===PH.PLAY&&!myTurn&&<div style={{textAlign:"center",color:"#8a8a6e",fontSize:22,padding:12,animation:"pulse 1.5s ease-in-out infinite"}}>Waiting for other players...</div>}
         {phase===PH.DEALER&&<div style={{textAlign:"center",color:"#f5d76e",fontSize:24,padding:12,letterSpacing:3,animation:"pulse 1.2s ease-in-out infinite"}}>Dealer is playing...</div>}
@@ -727,12 +833,8 @@ function App(){
             </div>
             <button onClick={nextRound} style={{padding:"16px 60px",fontSize:26,fontWeight:"bold",letterSpacing:5,background:"linear-gradient(180deg,#d4af37,#b8972e)",color:"#1a1a0e",border:"none",borderRadius:16,cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",boxShadow:"0 5px 24px rgba(212,175,55,.3)",transition:"all .25s",minHeight:60}}
               onMouseOver={e=>e.target.style.transform="translateY(-3px)"} onMouseOut={e=>e.target.style.transform="none"}>{bal<MIN_BET?"Game Over":"Next Hand"}</button>
-          </div>)}
+          </div>
+        )}
       </div>
     </div>);
 }
-
-ReactDOM.render(<App/>, document.getElementById('root'));
-</script>
-</body>
-</html>
