@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body,#root{width:100%;height:100%;overflow:hidden;background:#060e0a;}
+html,body,#root{width:100%;height:100%;overflow:hidden;background:#060e0a;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 @keyframes cardIn{0%{transform:translateX(80px) translateY(-60px) rotate(18deg) scale(.3);opacity:0;filter:blur(3px);}40%{opacity:1;filter:blur(0);}70%{transform:translateX(-2px) translateY(1px) rotate(-1deg) scale(1.02);}100%{transform:none;opacity:1;}}
 @keyframes chipDrop{0%{transform:translateY(-50px) scale(.3) rotate(-15deg);opacity:0;}40%{opacity:1;}65%{transform:translateY(4px) scale(1.05) rotate(2deg);}82%{transform:translateY(-1px) scale(.98);}100%{transform:none;opacity:1;}}
 @keyframes winGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(39,174,96,.3));}50%{filter:drop-shadow(0 0 18px rgba(39,174,96,.7));}}
@@ -33,6 +33,7 @@ html,body,#root{width:100%;height:100%;overflow:hidden;background:#060e0a;}
 @keyframes shuffleTextPulse{0%,100%{opacity:.6;letter-spacing:8px;}50%{opacity:1;letter-spacing:14px;}}
 @keyframes shuffleProgressFill{0%{width:0%;}100%{width:100%;}}.fs-btn{position:fixed;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,.7);color:#d4af37;border:1.5px solid rgba(212,175,55,.4);border-radius:10px;padding:8px 16px;font-size:16px;cursor:pointer;font-family:'Georgia',serif;letter-spacing:2;transition:all .2s;}
 .fs-btn:hover{background:rgba(212,175,55,.2);transform:scale(1.05);}
+@media(max-width:768px){.fs-btn{padding:5px 10px;font-size:12px;letter-spacing:1;border-radius:6px;top:6px;right:6px;}}
 </style>
 </head>
 <body>
@@ -124,29 +125,48 @@ function getAdvice(hand,up){
 function aiDec(h,up,sk){const v=hv(h.cards),s=isSoft(h.cards),d=cv(up);if(sk==="beginner"){if(v<15)return"hit";if(v>=17)return"stand";return Math.random()>.5?"hit":"stand";}if(sk==="aggressive"){if(h.cards.length===2&&v>=9&&v<=12)return"double";if(v<16)return"hit";if(v===16&&d>=7)return"hit";if(v===17&&s)return"hit";return"stand";}if(s){if(v<=17)return h.cards.length===2&&v>=15&&d>=4&&d<=6?"double":"hit";if(v===18){if(d>=9)return"hit";if(d>=3&&d<=6&&h.cards.length===2)return"double";return"stand";}return"stand";}if(v<=8)return"hit";if(v===9)return h.cards.length===2&&d>=3&&d<=6?"double":"hit";if(v===10)return h.cards.length===2&&d<=9?"double":"hit";if(v===11)return h.cards.length===2?"double":"hit";if(v===12)return d>=4&&d<=6?"stand":"hit";if(v>=13&&v<=16)return d<=6?"stand":"hit";return"stand";}
 function aiBet(sk,b){const m=Math.min(b,MAX_BET);if(m<MIN_BET)return 0;if(sk==="beginner")return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*3)*5+5,m));if(sk==="aggressive")return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*6)*10+10,m));return Math.max(MIN_BET,Math.min(Math.floor(Math.random()*4)*5+10,m));}
 
+/* RESPONSIVE */
+function useResp(){
+  const [w,setW]=useState(window.innerWidth);
+  const [h,setH]=useState(window.innerHeight);
+  useEffect(()=>{const f=()=>{setW(window.innerWidth);setH(window.innerHeight);};window.addEventListener('resize',f);return()=>window.removeEventListener('resize',f);},[]);
+  const mob=w<768;const sm=w<480;
+  return {mob,sm,w,h,
+    card:mob?{w:56,h:78,sm_w:44,sm_h:62,rf:13,sf:11,cf:24,face:24,corner_t:3,corner_l:4,rad:7,brd:2}:{w:120,h:170,sm_w:80,sm_h:112,rf:28,sf:20,cf:54,face:50,corner_t:7,corner_l:8,rad:10,brd:3},
+    chip:mob?56:88,
+    mini:mob?26:38,
+    circle:mob?{human:80,ai:56}:{human:130,ai:100},
+    act:mob?{pad:"8px 14px",font:15,minW:70,minH:40}:{pad:"14px 34px",font:22,minW:110,minH:58},
+    top:mob?{title:16,info:13,btn:16,gap:8,pad:"6px 10px",padR:90}:{title:26,info:18,btn:18,gap:18,pad:"8px 20px",padR:160},
+    bot:mob?{chipGap:4,betFont:24,btnPad:"8px 16px",btnFont:16,dealPad:"10px 28px",dealFont:18}:{chipGap:12,betFont:38,btnPad:"12px 28px",btnFont:20,dealPad:"14px 52px",dealFont:26},
+    table:mob?{ry:65,msgFont:16,dlrFont:14,dlrValFont:18,nameFont:12,betFont:12}:{ry:70,msgFont:24,dlrFont:18,dlrValFont:24,nameFont:18,betFont:16},
+  };
+}
+
 /* COMPONENTS */
-function Card({card,faceDown=false,small=false,style={},animated=false,delay=0}){
-  const w=small?80:120,h=small?112:170;
+function Card({card,faceDown=false,small=false,style={},animated=false,delay=0,R}){
+  const r=R||{w:120,h:170,sm_w:80,sm_h:112,rf:28,sf:20,cf:54,face:50,corner_t:7,corner_l:8,rad:10,brd:3};
+  const w=small?r.sm_w:r.w,h=small?r.sm_h:r.h;
+  const rf=small?Math.round(r.rf*.65):r.rf, sf=small?Math.round(r.sf*.75):r.sf, cf=small?Math.round(r.cf*.63):r.cf;
   const anim=animated?{animation:`cardIn .5s cubic-bezier(.34,1.56,.64,1) ${delay}s both`}:{};
   if(faceDown) return (
-    <div style={{width:w,height:h,borderRadius:10,border:"3px solid #555",flexShrink:0,position:"relative",overflow:"hidden",
+    <div style={{width:w,height:h,borderRadius:r.rad,border:`${r.brd}px solid #555`,flexShrink:0,position:"relative",overflow:"hidden",
       background:"linear-gradient(135deg,#8b0000,#a20000,#8b0000)",boxShadow:"3px 4px 14px rgba(0,0,0,.6)",...anim,...style}}>
       <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,.05) 6px,rgba(255,255,255,.05) 7px)"}}/>
-      <div style={{position:"absolute",inset:6,border:"1.5px solid rgba(255,200,100,.2)",borderRadius:5}}/>
-      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:small?22:36,opacity:.25,color:"#ffd700"}}>♠</div>
+      <div style={{position:"absolute",inset:Math.max(3,Math.round(r.w*.05)),border:"1.5px solid rgba(255,200,100,.2)",borderRadius:Math.max(3,r.rad-3)}}/>
+      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:small?Math.round(r.face*.44):Math.round(r.face*.72),opacity:.25,color:"#ffd700"}}>♠</div>
     </div>);
   const clr=SUIT_CLR[card.suit];
-  const rf=small?18:28,sf=small?15:20,cf=small?34:54;
   return (
-    <div style={{width:w,height:h,borderRadius:10,border:"3px solid #b0b0a0",flexShrink:0,position:"relative",overflow:"hidden",
+    <div style={{width:w,height:h,borderRadius:r.rad,border:`${r.brd}px solid #b0b0a0`,flexShrink:0,position:"relative",overflow:"hidden",
       background:"linear-gradient(155deg,#fff,#f8f7f0 40%,#edebd8)",boxShadow:"3px 4px 14px rgba(0,0,0,.4)",...anim,...style}}>
-      <div style={{position:"absolute",top:small?4:7,left:small?5:8,display:"flex",flexDirection:"column",alignItems:"center",gap:0}}>
+      <div style={{position:"absolute",top:r.corner_t,left:r.corner_l,display:"flex",flexDirection:"column",alignItems:"center",gap:0}}>
         <span style={{fontSize:rf,fontWeight:"bold",fontFamily:"'Georgia',serif",color:clr,lineHeight:1}}>{card.rank}</span>
         <span style={{fontSize:sf,color:clr,lineHeight:1}}>{card.suit}</span>
       </div>
       <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:cf,color:clr,opacity:.12}}>{card.suit}</div>
-      {(card.rank==="A"||"JQK".includes(card.rank))&&<div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:small?32:50,fontWeight:900,fontFamily:"'Playfair Display','Georgia',serif",color:clr,opacity:.7}}>{card.rank}</div>}
-      <div style={{position:"absolute",bottom:small?4:7,right:small?5:8,display:"flex",flexDirection:"column",alignItems:"center",gap:0,transform:"rotate(180deg)"}}>
+      {(card.rank==="A"||"JQK".includes(card.rank))&&<div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:small?Math.round(r.face*.64):r.face,fontWeight:900,fontFamily:"'Playfair Display','Georgia',serif",color:clr,opacity:.7}}>{card.rank}</div>}
+      <div style={{position:"absolute",bottom:r.corner_t,right:r.corner_l,display:"flex",flexDirection:"column",alignItems:"center",gap:0,transform:"rotate(180deg)"}}>
         <span style={{fontSize:rf,fontWeight:"bold",fontFamily:"'Georgia',serif",color:clr,lineHeight:1}}>{card.rank}</span>
         <span style={{fontSize:sf,color:clr,lineHeight:1}}>{card.suit}</span>
       </div>
@@ -183,7 +203,7 @@ function MiniChip({value,size=38,style={}}){
   </div>);
 }
 
-function BetStack({amount,chips:exactChips,animate=true,style={}}){
+function BetStack({amount,chips:exactChips,animate=true,style={},miniSize=38}){
   if(amount<=0&&(!exactChips||!exactChips.length))return null;
   let allChips;
   if(exactChips&&exactChips.length>0){allChips=exactChips;}
@@ -191,81 +211,105 @@ function BetStack({amount,chips:exactChips,animate=true,style={}}){
   const groups=[];const seen={};
   for(const v of allChips){if(!seen[v]){seen[v]={val:v,count:0,idx:groups.length};groups.push(seen[v]);}seen[v].count++;}
   let chipIdx=0;
-  return (<div style={{display:"flex",gap:5,alignItems:"flex-end",justifyContent:"center",...style}}>
+  const ms=miniSize;
+  return (<div style={{display:"flex",gap:Math.max(2,Math.round(ms*.12)),alignItems:"flex-end",justifyContent:"center",...style}}>
     {groups.map((g)=>{
       const stack=[];
-      for(let i=0;i<Math.min(g.count,8);i++){const ci=chipIdx++;stack.push(<MiniChip key={ci} value={g.val} size={38} style={{position:i>0?"absolute":"relative",bottom:i>0?i*5:undefined,left:i>0?0:undefined,animation:animate?`chipDrop .35s cubic-bezier(.34,1.56,.64,1) ${ci*.04}s both`:"none",zIndex:i}}/>);}
-      return (<div key={g.val} style={{position:"relative",display:"flex",flexDirection:"column-reverse",alignItems:"center",width:38,height:Math.min(g.count,8)*5+38}}>
+      for(let i=0;i<Math.min(g.count,8);i++){const ci=chipIdx++;stack.push(<MiniChip key={ci} value={g.val} size={ms} style={{position:i>0?"absolute":"relative",bottom:i>0?i*Math.max(3,Math.round(ms*.13)):undefined,left:i>0?0:undefined,animation:animate?`chipDrop .35s cubic-bezier(.34,1.56,.64,1) ${ci*.04}s both`:"none",zIndex:i}}/>);}
+      return (<div key={g.val} style={{position:"relative",display:"flex",flexDirection:"column-reverse",alignItems:"center",width:ms,height:Math.min(g.count,8)*Math.max(3,Math.round(ms*.13))+ms}}>
         {stack}
-        {g.count>1&&<div style={{position:"absolute",top:-14,fontSize:14,color:"#f5d76e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.9)",zIndex:20}}>×{g.count}</div>}
+        {g.count>1&&<div style={{position:"absolute",top:-Math.round(ms*.36),fontSize:Math.max(10,Math.round(ms*.36)),color:"#f5d76e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.9)",zIndex:20}}>×{g.count}</div>}
       </div>);
     })}
   </div>);
 }
 
-function BettingCircle({player,hand,handIdx,isActive,isHuman,dealerCards,showHole,phase,betChips}){
+function BettingCircle({player,hand,handIdx,isActive,isHuman,dealerCards,showHole,phase,betChips,R}){
   const cards=hand.cards, val=hv(cards), bet=hand.bet, result=hand.result;
   const bj=isBJ(cards)&&!hand.isSplit;
   const won=result==="WIN"||result==="BLACKJACK";
-  const circleSize=isHuman?130:100;
+  const r=R||{card:{},circle:{human:130,ai:100},mini:38};
+  const circleSize=isHuman?r.circle.human:r.circle.ai;
+  const mob=r.mob||false;
   const useBetChips=(betChips&&betChips.length>0&&phase===1)?betChips:null;
+  const dblBet=hand.doubled?(hand.dblExtra||0):0;
+  const origBet=bet-dblBet;
+  const baseOverlap=mob?(isHuman?-12:-10):(isHuman?-22:-16);
+  const cardCount=hand.cards.length;
+  const cardOverlap=mob&&cardCount>3?(isHuman?Math.max(-38,-8*cardCount):Math.max(-32,-7*cardCount)):baseOverlap;
   return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:isHuman?160:120}}>
-      {result&&(<div style={{fontSize:isHuman?22:17,fontWeight:"bold",padding:"5px 18px",borderRadius:12,letterSpacing:2,background:won?"linear-gradient(135deg,#27ae60,#2ecc71)":result==="PUSH"?"linear-gradient(135deg,#f39c12,#e67e22)":result==="SURRENDER"?"linear-gradient(135deg,#8e44ad,#9b59b6)":"linear-gradient(135deg,#c0392b,#e74c3c)",color:"#fff",animation:"resultPop .5s cubic-bezier(.34,1.56,.64,1) both",boxShadow:won?"0 3px 18px rgba(39,174,96,.4)":"0 3px 10px rgba(0,0,0,.3)"}}>{result}{result==="BLACKJACK"?" 🎉":""}</div>)}
-      {cards.length>0&&(<div style={{fontSize:isHuman?26:20,fontWeight:"bold",color:val>21?"#e74c3c":"#fff",background:val>21?"rgba(192,57,43,.7)":"rgba(0,0,0,.6)",padding:"4px 16px",borderRadius:12,animation:"fadeUp .3s ease both",animationDelay:".2s",letterSpacing:2}}>{bj?"BJ! 🃏":val>21?`BUST ${val}`:val}</div>)}
-      {cards.length>0&&(<div style={{display:"flex",justifyContent:"center",marginBottom:-6,animation:won?"winGlow 1.5s ease-in-out infinite":"none"}}>{hand.cards.map((c,i)=>(<Card key={`${c.rank}${c.suit}${i}`} card={c} small={!isHuman} animated delay={i*.1} style={{marginLeft:i>0?(isHuman?-22:-16):0,zIndex:i,position:"relative"}}/>))}</div>)}
-      <div style={{width:circleSize,height:circleSize,borderRadius:"50%",position:"relative",border:isActive?`4px solid rgba(241,196,15,.8)`:`3px solid rgba(212,175,55,.3)`,background:isActive?"rgba(241,196,15,.08)":"rgba(0,0,0,.2)",boxShadow:isActive?"0 0 24px rgba(241,196,15,.3),inset 0 0 16px rgba(241,196,15,.08)":"inset 0 3px 8px rgba(0,0,0,.3)",animation:isActive?"seatGlow 1.5s ease-in-out infinite":"none",display:"flex",alignItems:"center",justifyContent:"center",overflow:"visible",transition:"all .3s"}}>
-        <div style={{position:"absolute",inset:7,borderRadius:"50%",border:"1.5px solid rgba(212,175,55,.15)"}}/>
-        {bet>0?(<BetStack amount={bet} chips={useBetChips} animate={true}/>):(<span style={{fontSize:isHuman?16:12,color:"rgba(212,175,55,.3)",textTransform:"uppercase",letterSpacing:2,fontFamily:"'Georgia',serif",textAlign:"center",lineHeight:1.2}}>{isHuman?"BET":""}</span>)}
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:mob?3:6,minWidth:mob?(isHuman?90:60):(isHuman?160:120),maxWidth:mob?"40vw":"none"}}>
+      {result&&(<div style={{fontSize:mob?(isHuman?14:11):(isHuman?22:17),fontWeight:"bold",padding:mob?"3px 10px":"5px 18px",borderRadius:mob?8:12,letterSpacing:mob?1:2,background:won?"linear-gradient(135deg,#27ae60,#2ecc71)":result==="PUSH"?"linear-gradient(135deg,#f39c12,#e67e22)":result==="SURRENDER"?"linear-gradient(135deg,#8e44ad,#9b59b6)":"linear-gradient(135deg,#c0392b,#e74c3c)",color:"#fff",animation:"resultPop .5s cubic-bezier(.34,1.56,.64,1) both",boxShadow:won?"0 3px 18px rgba(39,174,96,.4)":"0 3px 10px rgba(0,0,0,.3)"}}>{result}{result==="BLACKJACK"?" 🎉":""}</div>)}
+      {cards.length>0&&(<div style={{fontSize:mob?(isHuman?16:13):(isHuman?26:20),fontWeight:"bold",color:val>21?"#e74c3c":"#fff",background:val>21?"rgba(192,57,43,.7)":"rgba(0,0,0,.6)",padding:mob?"2px 8px":"4px 16px",borderRadius:mob?8:12,animation:"fadeUp .3s ease both",animationDelay:".2s",letterSpacing:mob?1:2}}>{bj?"BJ! 🃏":val>21?`BUST ${val}`:val}</div>)}
+      {cards.length>0&&(<div style={{display:"flex",justifyContent:"center",marginBottom:mob?-3:-6,animation:won?"winGlow 1.5s ease-in-out infinite":"none"}}>{hand.cards.map((c,i)=>(<Card key={`${c.rank}${c.suit}${i}`} card={c} small={!isHuman} R={isHuman?r.card:r.card} animated delay={i*.1} style={{marginLeft:i>0?cardOverlap:0,zIndex:i,position:"relative"}}/>))}</div>)}
+      <div style={{display:"flex",alignItems:"center",gap:mob?4:8}}>
+        <div style={{width:circleSize,height:circleSize,borderRadius:"50%",position:"relative",border:isActive?`${mob?3:4}px solid rgba(241,196,15,.8)`:`${mob?2:3}px solid rgba(212,175,55,.3)`,background:isActive?"rgba(241,196,15,.08)":"rgba(0,0,0,.2)",boxShadow:isActive?"0 0 24px rgba(241,196,15,.3),inset 0 0 16px rgba(241,196,15,.08)":"inset 0 3px 8px rgba(0,0,0,.3)",animation:isActive?"seatGlow 1.5s ease-in-out infinite":"none",display:"flex",alignItems:"center",justifyContent:"center",overflow:"visible",transition:"all .3s"}}>
+          <div style={{position:"absolute",inset:mob?4:7,borderRadius:"50%",border:"1.5px solid rgba(212,175,55,.15)"}}/>
+          {origBet>0?(<BetStack amount={origBet} chips={useBetChips} animate={true} miniSize={r.mini}/>):(<span style={{fontSize:mob?(isHuman?10:8):(isHuman?16:12),color:"rgba(212,175,55,.3)",textTransform:"uppercase",letterSpacing:mob?1:2,fontFamily:"'Georgia',serif",textAlign:"center",lineHeight:1.2}}>{isHuman?"BET":""}</span>)}
+        </div>
+        {hand.doubled&&dblBet>0&&(
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <BetStack amount={dblBet} animate={true} miniSize={r.mini}/>
+            <span style={{fontSize:mob?8:11,color:"#2980b9",fontWeight:"bold",letterSpacing:1,textTransform:"uppercase"}}>2×</span>
+          </div>
+        )}
       </div>
-      {handIdx!==undefined&&handIdx>=0&&(<div style={{fontSize:15,color:"rgba(212,175,55,.5)",letterSpacing:2}}>Hand {handIdx+1}</div>)}
+      {handIdx!==undefined&&handIdx>=0&&(<div style={{fontSize:mob?10:15,color:"rgba(212,175,55,.5)",letterSpacing:mob?1:2}}>Hand {handIdx+1}</div>)}
     </div>);
 }
 
-function PlayerSeat({player,pi,activePI,activeHI,phase,dealerCards,showHole,betChips}){
+function PlayerSeat({player,pi,activePI,activeHI,phase,dealerCards,showHole,betChips,R}){
   const isHuman=player.isHuman;
   const isMyTurn=phase===3&&pi===activePI;
+  const r=R||{};const mob=r.mob||false;const t=r.table||{nameFont:18,betFont:16};
   return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-      <div style={{display:"flex",gap:isHuman?16:10,alignItems:"flex-end"}}>
-        {player.hands.map((hand,hi)=>(<BettingCircle key={hi} player={player} hand={hand} handIdx={player.hands.length>1?hi:undefined} isActive={isMyTurn&&hi===activeHI} isHuman={isHuman} dealerCards={dealerCards} showHole={showHole} phase={phase} betChips={isHuman&&hi===0?betChips:null}/>))}
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:mob?2:4}}>
+      <div style={{display:"flex",gap:mob?(isHuman?8:4):(isHuman?16:10),alignItems:"flex-end"}}>
+        {player.hands.map((hand,hi)=>(<BettingCircle key={hi} player={player} hand={hand} handIdx={player.hands.length>1?hi:undefined} isActive={isMyTurn&&hi===activeHI} isHuman={isHuman} dealerCards={dealerCards} showHole={showHole} phase={phase} betChips={isHuman&&hi===0?betChips:null} R={r}/>))}
       </div>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginTop:4}}>
-        <div style={{fontSize:isHuman?18:15,fontWeight:"bold",color:isHuman?"#f5d76e":"#a0a080",letterSpacing:2,textTransform:"uppercase",textShadow:"0 2px 6px rgba(0,0,0,.8)",whiteSpace:"nowrap",background:"rgba(0,0,0,.35)",padding:"4px 14px",borderRadius:10}}>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:mob?1:2,marginTop:mob?2:4}}>
+        <div style={{fontSize:isHuman?t.nameFont:Math.round(t.nameFont*.83),fontWeight:"bold",color:isHuman?"#f5d76e":"#a0a080",letterSpacing:mob?1:2,textTransform:"uppercase",textShadow:"0 2px 6px rgba(0,0,0,.8)",whiteSpace:"nowrap",background:"rgba(0,0,0,.35)",padding:mob?"2px 8px":"4px 14px",borderRadius:mob?6:10}}>
           {player.name}
-          {!isHuman&&<span style={{fontSize:14,marginLeft:5,opacity:.6}}>({player.skill==="beginner"?"🎲":player.skill==="aggressive"?"🔥":"📊"})</span>}
+          {!isHuman&&<span style={{fontSize:mob?10:14,marginLeft:mob?3:5,opacity:.6}}>({player.skill==="beginner"?"🎲":player.skill==="aggressive"?"🔥":"📊"})</span>}
         </div>
-        <div style={{fontSize:16,color:"#8a9a6e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.8)"}}>{player.hands.reduce((s,h)=>s+h.bet,0)>0?`Bet: $${player.hands.reduce((s,h)=>s+h.bet,0)}`:""}</div>
+        <div style={{fontSize:t.betFont,color:"#8a9a6e",fontWeight:"bold",textShadow:"0 1px 4px rgba(0,0,0,.8)"}}>{player.hands.reduce((s,h)=>s+h.bet,0)>0?`Bet: $${player.hands.reduce((s,h)=>s+h.bet,0)}`:""}</div>
       </div>
     </div>);
 }
 
-function ActBtn({label,onClick,color,disabled=false}){
+function ActBtn({label,onClick,color,disabled=false,R}){
   const [hov,setH]=useState(false);
+  const a=R||{pad:"14px 34px",font:22,minW:110,minH:58};
+  const mob=a.font<=18;
+  const tipW=mob?180:260;
+  /* Edge-aware: Hit is leftmost, Surrender is rightmost */
+  const tipAlign=label==="Hit"?"left":label==="Surrender"?"right":"center";
+  const tipPos=tipAlign==="left"?{left:0,transform:"none"}:tipAlign==="right"?{right:0,transform:"none"}:{left:"50%",transform:"translateX(-50%)"};
+  const notchLeft=tipAlign==="left"?(mob?"24px":"40px"):tipAlign==="right"?(mob?`${tipW-24}px`:`${tipW-40}px`):"50%";
   return (
     <button onClick={onClick} disabled={disabled} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
-      style={{position:"relative",overflow:"visible",padding:"14px 34px",fontSize:22,fontWeight:"bold",letterSpacing:3,background:disabled?"rgba(255,255,255,.04)":`linear-gradient(180deg,${color},${color}cc)`,color:disabled?"#555":"#fff",border:"none",borderRadius:16,cursor:disabled?"not-allowed":"pointer",fontFamily:"'Georgia',serif",textTransform:"uppercase",opacity:disabled?.3:1,transition:"transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s",boxShadow:disabled?"none":`0 4px 16px ${color}55`,transform:hov&&!disabled?"translateY(-3px) scale(1.05)":"none",minWidth:110,minHeight:58}}>
+      style={{position:"relative",overflow:"visible",padding:a.pad,fontSize:a.font,fontWeight:"bold",letterSpacing:a.font>18?3:1,background:disabled?"rgba(255,255,255,.04)":`linear-gradient(180deg,${color},${color}cc)`,color:disabled?"#555":"#fff",border:"none",borderRadius:a.font>18?16:10,cursor:disabled?"not-allowed":"pointer",fontFamily:"'Georgia',serif",textTransform:"uppercase",opacity:disabled?.3:1,transition:"transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s",boxShadow:disabled?"none":`0 4px 16px ${color}55`,transform:hov&&!disabled?"translateY(-3px) scale(1.05)":"none",minWidth:a.minW,minHeight:a.minH}}>
       {label}
       {hov&&!disabled&&TIPS[label]&&(
-        <div style={{position:"absolute",bottom:"calc(100% + 12px)",left:"50%",marginLeft:-130,background:"rgba(8,8,18,.96)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:16,padding:"14px 22px",width:260,zIndex:90,pointerEvents:"none",boxShadow:"0 12px 40px rgba(0,0,0,.65)",textTransform:"none",letterSpacing:0,fontWeight:"normal"}}>
-          <div style={{position:"absolute",bottom:-9,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:16,height:16,background:"rgba(8,8,18,.96)",borderRight:"1.5px solid rgba(212,175,55,.35)",borderBottom:"1.5px solid rgba(212,175,55,.35)"}}/>
-          <div style={{fontSize:18,color:"#d4c8a0",lineHeight:1.5,textAlign:"center"}}>{TIPS[label]}</div>
+        <div style={{position:"absolute",bottom:"calc(100% + 12px)",...tipPos,background:"#0a0a14",border:"1.5px solid rgba(212,175,55,.5)",borderRadius:mob?10:16,padding:mob?"8px 12px":"14px 22px",width:tipW,zIndex:9000,pointerEvents:"none",boxShadow:"0 12px 40px rgba(0,0,0,1)",textTransform:"none",letterSpacing:0,fontWeight:"normal"}}>
+          <div style={{position:"absolute",bottom:-7,left:notchLeft,transform:"translateX(-50%) rotate(45deg)",width:mob?12:16,height:mob?12:16,background:"#0a0a14",borderRight:"1.5px solid rgba(212,175,55,.5)",borderBottom:"1.5px solid rgba(212,175,55,.5)"}}/>
+          <div style={{fontSize:mob?11:18,color:"#d4c8a0",lineHeight:1.4,textAlign:"center"}}>{TIPS[label]}</div>
         </div>)}
     </button>);
 }
 
-function StratTip({advice,onClose}){
+function DealerBubble({advice,onClose,mob}){
   if(!advice)return null;
   const cm={Hit:"#27ae60",Stand:"#c0392b",Double:"#2980b9",Split:"#8e44ad",Surrender:"#7f8c8d"};const c=cm[advice.a]||"#d4af37";
   return (
-    <div style={{position:"absolute",bottom:"calc(100% + 16px)",left:"50%",transform:"translateX(-50%)",background:"rgba(10,10,20,.97)",border:`2.5px solid ${c}`,borderRadius:18,padding:"20px 28px",minWidth:300,maxWidth:400,zIndex:100,boxShadow:`0 14px 50px rgba(0,0,0,.7),0 0 24px ${c}22`,animation:"fadeUp .2s ease both"}}>
-      <div style={{position:"absolute",bottom:-10,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:18,height:18,background:"rgba(10,10,20,.97)",borderRight:`2.5px solid ${c}`,borderBottom:`2.5px solid ${c}`}}/>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-        <span style={{fontSize:14,color:"#7a7a6e",textTransform:"uppercase",letterSpacing:4}}>Basic Strategy</span>
-        <button onClick={onClose} style={{background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:24,padding:0,lineHeight:1}}>×</button>
+    <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:mob?"22%":"28%",left:"50%",transform:"translateX(-50%)",zIndex:9000,animation:"fadeUp .25s ease both"}}>
+      {/* Notch pointing up toward dealer */}
+      <div style={{position:"absolute",top:mob?-7:-9,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:mob?14:18,height:mob?14:18,background:"#0a0a14",borderLeft:`2px solid ${c}`,borderTop:`2px solid ${c}`,zIndex:1}}/>
+      <div style={{background:"#0a0a14",border:`2px solid ${c}`,borderRadius:mob?12:18,padding:mob?"10px 16px":"16px 24px",minWidth:mob?180:280,maxWidth:mob?260:380,boxShadow:`0 10px 40px rgba(0,0,0,.9),0 0 20px ${c}22`,textAlign:"center"}}>
+        <div style={{fontSize:mob?9:12,color:"#7a7a6e",textTransform:"uppercase",letterSpacing:mob?2:4,marginBottom:mob?4:6}}>Dealer says...</div>
+        <div style={{fontSize:mob?20:30,fontWeight:"bold",color:c,marginBottom:mob?3:6,fontFamily:"'Playfair Display','Georgia',serif"}}>{advice.a}</div>
+        <div style={{fontSize:mob?12:16,color:"#bbb0a0",lineHeight:1.4}}>{advice.r}</div>
       </div>
-      <div style={{fontSize:32,fontWeight:"bold",color:c,marginBottom:6,fontFamily:"'Playfair Display','Georgia',serif"}}>{advice.a}</div>
-      <div style={{fontSize:18,color:"#bbb0a0",lineHeight:1.5}}>{advice.r}</div>
     </div>);
 }
 
@@ -294,6 +338,7 @@ function App(){
   const [shuffling,setShuffling]=useState(false);
   const [lastBet,setLastBet]=useState(0);
   const [lastBetChips,setLastBetChips]=useState([]);
+  const R=useResp();
 
   const shoeR=useRef([]);
   const plsR=useRef([]);
@@ -316,8 +361,8 @@ function App(){
   function startGame(){
     S.init();S.btn();const ns=mkShoe(numDk);shoeR.current=ns;setShoe(ns);S.shuffle();
     const names=[...AI_NAMES].sort(()=>Math.random()-.5);
-    const ai=[];for(let i=0;i<numAI;i++)ai.push({name:names[i],isHuman:false,skill:AI_SKILL[i%AI_SKILL.length],balance:500+Math.floor(Math.random()*500),hands:[{cards:[],bet:0,result:null,doubled:false,surrendered:false,isSplit:false}],insBet:0});
-    const all=[...ai];all.splice(Math.min(1,numAI),0,{name:"You",isHuman:true,skill:null,balance:START_BAL,hands:[{cards:[],bet:0,result:null,doubled:false,surrendered:false,isSplit:false}],insBet:0});
+    const ai=[];for(let i=0;i<numAI;i++)ai.push({name:names[i],isHuman:false,skill:AI_SKILL[i%AI_SKILL.length],balance:500+Math.floor(Math.random()*500),hands:[{cards:[],bet:0,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:false}],insBet:0});
+    const all=[...ai];all.splice(Math.min(1,numAI),0,{name:"You",isHuman:true,skill:null,balance:START_BAL,hands:[{cards:[],bet:0,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:false}],insBet:0});
     setPls(all);updBal(()=>START_BAL);setDlr({cards:[]});setPhase(PH.BET);setRnd(1);setBet(0);betR.current=0;setBetChips([]);setSeenCards([]);setLastBet(0);setLastBetChips([]);setMsg("Place your bet!");setHole(false);setAdv(false);
   }
 
@@ -340,8 +385,8 @@ function App(){
     setLastBet(curBet);setLastBetChips([...betChips]);
     setBetChips([]);
     const np=plsR.current.map(p=>{
-      if(p.isHuman) return {...p,balance:p.balance-curBet,hands:[{cards:[],bet:curBet,result:null,doubled:false,surrendered:false,isSplit:false}],insBet:0};
-      const ab=aiBet(p.skill,p.balance);return {...p,balance:p.balance-ab,hands:[{cards:[],bet:ab,result:null,doubled:false,surrendered:false,isSplit:false}],insBet:0};
+      if(p.isHuman) return {...p,balance:p.balance-curBet,hands:[{cards:[],bet:curBet,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:false}],insBet:0};
+      const ab=aiBet(p.skill,p.balance);return {...p,balance:p.balance-ab,hands:[{cards:[],bet:ab,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:false}],insBet:0};
     });
     updBal(b=>b-curBet);
     /* 🍀 Lucky $77 */
@@ -392,8 +437,8 @@ function App(){
     const pi=apiR.current,hi=ahiR.current,p=ps[pi],h=p.hands[hi];
     if(a==="hit"){h.cards.push(draw());S.card();if(hv(h.cards)>21){h.result="BUST";setPls(ps);advance(ps,pi,hi);}else if(hv(h.cards)===21){setPls(ps);advance(ps,pi,hi);}else setPls(ps);}
     else if(a==="stand"){advance(ps,pi,hi);}
-    else if(a==="double"){const ex=Math.min(h.bet,p.isHuman?balR.current:p.balance);h.doubled=true;h.bet+=ex;if(p.isHuman){updBal(b=>b-ex);p.balance-=ex;}else p.balance-=ex;h.cards.push(draw());S.card();S.chip();if(hv(h.cards)>21)h.result="BUST";setPls(ps);advance(ps,pi,hi);}
-    else if(a==="split"){if(!canSp(h))return;const ex=Math.min(h.bet,p.isHuman?balR.current:p.balance);if(p.isHuman){updBal(b=>b-ex);p.balance-=ex;}else p.balance-=ex;S.chip();S.card();p.hands=[{cards:[h.cards[0],draw()],bet:h.bet,result:null,doubled:false,surrendered:false,isSplit:true},{cards:[h.cards[1],draw()],bet:ex,result:null,doubled:false,surrendered:false,isSplit:true}];setPls(ps);setAHI(0);if(!p.isHuman)setTimeout(()=>runAI(pi,0),700);else setMsg("Playing split hand 1...");return;}
+    else if(a==="double"){const ex=Math.min(h.bet,p.isHuman?balR.current:p.balance);h.doubled=true;h.dblExtra=ex;h.bet+=ex;if(p.isHuman){updBal(b=>b-ex);p.balance-=ex;}else p.balance-=ex;h.cards.push(draw());S.card();S.chip();if(hv(h.cards)>21)h.result="BUST";setPls(ps);advance(ps,pi,hi);}
+    else if(a==="split"){if(!canSp(h))return;const ex=Math.min(h.bet,p.isHuman?balR.current:p.balance);if(p.isHuman){updBal(b=>b-ex);p.balance-=ex;}else p.balance-=ex;S.chip();S.card();p.hands=[{cards:[h.cards[0],draw()],bet:h.bet,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:true},{cards:[h.cards[1],draw()],bet:ex,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:true}];setPls(ps);setAHI(0);if(!p.isHuman)setTimeout(()=>runAI(pi,0),700);else setMsg("Playing split hand 1...");return;}
     else if(a==="surrender"){h.surrendered=true;h.result="SURRENDER";const ref=Math.floor(h.bet/2);h.bet-=ref;if(p.isHuman){updBal(b=>b+ref);p.balance+=ref;}else p.balance+=ref;setPls(ps);advance(ps,pi,hi);}
   }
 
@@ -411,7 +456,7 @@ function App(){
     const dl=dlrR.current,p=ps[pi];if(!p||hi>=p.hands.length){advAI(ps,pi,hi);return;}
     const h=p.hands[hi];if(h.result){advAI(ps,pi,hi);return;}
     const dec=aiDec(h,dl.cards[0],p.skill);
-    if(dec==="double"&&h.cards.length===2&&p.balance>=h.bet){const ex=Math.min(h.bet,p.balance);h.doubled=true;h.bet+=ex;p.balance-=ex;h.cards.push(draw());S.card();if(hv(h.cards)>21)h.result="BUST";setPls(ps);setMsg(`${p.name} doubles!`);setTimeout(()=>advAI(ps,pi,hi),800);}
+    if(dec==="double"&&h.cards.length===2&&p.balance>=h.bet){const ex=Math.min(h.bet,p.balance);h.doubled=true;h.dblExtra=ex;h.bet+=ex;p.balance-=ex;h.cards.push(draw());S.card();if(hv(h.cards)>21)h.result="BUST";setPls(ps);setMsg(`${p.name} doubles!`);setTimeout(()=>advAI(ps,pi,hi),800);}
     else if(dec==="hit"){h.cards.push(draw());S.card();setPls(ps);if(hv(h.cards)>21){h.result="BUST";setMsg(`${p.name} busts!`);setPls([...ps]);setTimeout(()=>advAI(ps,pi,hi),700);}else if(hv(h.cards)===21){setMsg(`${p.name} has 21!`);setTimeout(()=>advAI(ps,pi,hi),700);}else{setMsg(`${p.name} hits...`);setTimeout(()=>runAI(pi,hi),700);}}
     else{setMsg(`${p.name} stands.`);setPls(ps);setTimeout(()=>advAI(ps,pi,hi),700);}
   }
@@ -449,7 +494,7 @@ function App(){
   }
 
   function goToBet(hp){
-    const nxt=plsR.current.filter(p=>p.isHuman||p.balance>=MIN_BET).map(p=>({...p,hands:[{cards:[],bet:0,result:null,doubled:false,surrendered:false,isSplit:false}],insBet:0}));
+    const nxt=plsR.current.filter(p=>p.isHuman||p.balance>=MIN_BET).map(p=>({...p,hands:[{cards:[],bet:0,result:null,doubled:false,dblExtra:0,surrendered:false,isSplit:false}],insBet:0}));
     setPls(nxt);setDlr({cards:[]});setBet(0);betR.current=0;setBetChips([]);setPhase(PH.BET);setHole(false);setRnd(r=>r+1);setMsg("Place your bet!");updBal(()=>hp.balance);setAdv(false);
   }
 
@@ -480,28 +525,28 @@ function App(){
 
   /* SETUP SCREEN */
   if(phase===PH.SETUP) return (
-    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"radial-gradient(ellipse at center,#1a3a2a,#0d1f17 50%,#060e0a)",fontFamily:"'Georgia',serif",color:"#d4af37",padding:24,overflow:"auto"}}>
-      <div style={{textAlign:"center",maxWidth:600,width:"100%",background:"rgba(0,0,0,.45)",borderRadius:28,padding:"48px 48px",border:"2px solid rgba(212,175,55,.3)",boxShadow:"0 24px 80px rgba(0,0,0,.7)"}}>
-        <div style={{fontSize:24,letterSpacing:10,marginBottom:8,color:"#b8972e"}}>♠ ♥ ♦ ♣</div>
-        <h1 style={{fontSize:62,margin:"0 0 4px",fontFamily:"'Playfair Display',Georgia,serif",color:"#f5d76e",textShadow:"0 3px 16px rgba(245,215,110,.35)",letterSpacing:5}}>BLACKJACK</h1>
-        <div style={{fontSize:17,color:"#8a8a6e",marginBottom:44,letterSpacing:5}}>CLASSIC TABLE GAME</div>
-        <div style={{marginBottom:30}}>
-          <label style={{display:"block",marginBottom:14,fontSize:18,color:"#c9a84c",letterSpacing:3,textTransform:"uppercase"}}>Number of Decks</label>
-          <div style={{display:"flex",gap:14,justifyContent:"center"}}>
-            {[1,2,3,4].map(n=><button key={n} onClick={()=>{S.init();S.select();setNumDk(n);}} style={{width:72,height:72,borderRadius:16,border:numDk===n?"3px solid #f5d76e":"3px solid rgba(212,175,55,.2)",background:numDk===n?"rgba(245,215,110,.15)":"rgba(255,255,255,.03)",color:numDk===n?"#f5d76e":"#8a8a6e",fontSize:30,fontWeight:"bold",cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",transition:"all .25s"}}>{n}</button>)}
+    <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"radial-gradient(ellipse at center,#1a3a2a,#0d1f17 50%,#060e0a)",fontFamily:"'Georgia',serif",color:"#d4af37",padding:R.mob?12:24,overflow:"auto"}}>
+      <div style={{textAlign:"center",maxWidth:600,width:"100%",background:"rgba(0,0,0,.45)",borderRadius:R.mob?18:28,padding:R.mob?"28px 20px":"48px 48px",border:"2px solid rgba(212,175,55,.3)",boxShadow:"0 24px 80px rgba(0,0,0,.7)"}}>
+        <div style={{fontSize:R.mob?18:24,letterSpacing:R.mob?6:10,marginBottom:8,color:"#b8972e"}}>♠ ♥ ♦ ♣</div>
+        <h1 style={{fontSize:R.mob?36:62,margin:"0 0 4px",fontFamily:"'Playfair Display',Georgia,serif",color:"#f5d76e",textShadow:"0 3px 16px rgba(245,215,110,.35)",letterSpacing:R.mob?3:5}}>BLACKJACK</h1>
+        <div style={{fontSize:R.mob?13:17,color:"#8a8a6e",marginBottom:R.mob?28:44,letterSpacing:R.mob?3:5}}>CLASSIC TABLE GAME</div>
+        <div style={{marginBottom:R.mob?20:30}}>
+          <label style={{display:"block",marginBottom:R.mob?10:14,fontSize:R.mob?14:18,color:"#c9a84c",letterSpacing:3,textTransform:"uppercase"}}>Number of Decks</label>
+          <div style={{display:"flex",gap:R.mob?10:14,justifyContent:"center"}}>
+            {[1,2,3,4].map(n=><button key={n} onClick={()=>{S.init();S.select();setNumDk(n);}} style={{width:R.mob?54:72,height:R.mob?54:72,borderRadius:R.mob?12:16,border:numDk===n?"3px solid #f5d76e":"3px solid rgba(212,175,55,.2)",background:numDk===n?"rgba(245,215,110,.15)":"rgba(255,255,255,.03)",color:numDk===n?"#f5d76e":"#8a8a6e",fontSize:R.mob?22:30,fontWeight:"bold",cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",transition:"all .25s"}}>{n}</button>)}
           </div>
         </div>
-        <div style={{marginBottom:40}}>
-          <label style={{display:"block",marginBottom:14,fontSize:18,color:"#c9a84c",letterSpacing:3,textTransform:"uppercase"}}>Other Players</label>
-          <div style={{display:"flex",gap:14,justifyContent:"center"}}>
-            {[1,2,3].map(n=><button key={n} onClick={()=>{S.init();S.select();setNumAI(n);}} style={{width:72,height:72,borderRadius:16,border:numAI===n?"3px solid #f5d76e":"3px solid rgba(212,175,55,.2)",background:numAI===n?"rgba(245,215,110,.15)":"rgba(255,255,255,.03)",color:numAI===n?"#f5d76e":"#8a8a6e",fontSize:30,fontWeight:"bold",cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",transition:"all .25s"}}>{n}</button>)}
+        <div style={{marginBottom:R.mob?24:40}}>
+          <label style={{display:"block",marginBottom:R.mob?10:14,fontSize:R.mob?14:18,color:"#c9a84c",letterSpacing:3,textTransform:"uppercase"}}>Other Players</label>
+          <div style={{display:"flex",gap:R.mob?10:14,justifyContent:"center"}}>
+            {[1,2,3].map(n=><button key={n} onClick={()=>{S.init();S.select();setNumAI(n);}} style={{width:R.mob?54:72,height:R.mob?54:72,borderRadius:R.mob?12:16,border:numAI===n?"3px solid #f5d76e":"3px solid rgba(212,175,55,.2)",background:numAI===n?"rgba(245,215,110,.15)":"rgba(255,255,255,.03)",color:numAI===n?"#f5d76e":"#8a8a6e",fontSize:R.mob?22:30,fontWeight:"bold",cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",transition:"all .25s"}}>{n}</button>)}
           </div>
         </div>
-        <div style={{fontSize:16,color:"#6b7a5e",marginBottom:32,lineHeight:2.2}}>
+        <div style={{fontSize:R.mob?13:16,color:"#6b7a5e",marginBottom:R.mob?20:32,lineHeight:2.2}}>
           Starting Balance: <span style={{color:"#d4af37",fontWeight:"bold"}}>$750</span> · Limits: <span style={{color:"#d4af37",fontWeight:"bold"}}>$5 – $500</span><br/>
           Blackjack pays <span style={{color:"#d4af37",fontWeight:"bold"}}>3:2</span> · Dealer hits soft 17
         </div>
-        <button onClick={startGame} style={{padding:"18px 64px",fontSize:24,fontWeight:"bold",letterSpacing:5,background:"linear-gradient(180deg,#d4af37,#b8972e)",color:"#1a1a0e",border:"none",borderRadius:16,cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",boxShadow:"0 6px 28px rgba(212,175,55,.35)",transition:"all .25s"}}
+        <button onClick={startGame} style={{padding:R.mob?"14px 40px":"18px 64px",fontSize:R.mob?18:24,fontWeight:"bold",letterSpacing:R.mob?3:5,background:"linear-gradient(180deg,#d4af37,#b8972e)",color:"#1a1a0e",border:"none",borderRadius:16,cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",boxShadow:"0 6px 28px rgba(212,175,55,.35)",transition:"all .25s"}}
           onMouseOver={e=>e.target.style.transform="translateY(-3px) scale(1.03)"} onMouseOut={e=>e.target.style.transform="none"}>Take a Seat</button>
       </div>
     </div>);
@@ -514,14 +559,14 @@ function App(){
     <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",background:"#0a1008",fontFamily:"'Georgia',serif",color:"#e8e0c8",overflow:"hidden"}}>
 
       {/* TOP BAR */}
-      <div style={{display:"flex",alignItems:"center",flexWrap:"wrap",padding:"8px 20px",paddingRight:160,background:"rgba(0,0,0,.7)",borderBottom:"2px solid #2a1a0a",flexShrink:0,gap:18}}>
-          <span style={{color:"#d4af37",fontWeight:"bold",fontSize:26,fontFamily:"'Playfair Display','Georgia',serif",letterSpacing:4}}>♠ BLACKJACK</span>
-          <span style={{color:"#8a8a6e",fontSize:18}}>Round {rnd}</span>
-          <span style={{color:shoe.length<RESHUFFLE+10&&shoe.length>0?"#e67e22":"#8a8a6e",fontSize:18}}>{shoe.length} cards{shoe.length>0&&shoe.length<RESHUFFLE+10?" ⚠":""}</span>
-          <span style={{color:"#d4af37",fontWeight:"bold",fontSize:26,background:bal>START_BAL?"linear-gradient(90deg,#d4af37,#f5d76e,#d4af37)":"none",backgroundSize:"200% auto",WebkitBackgroundClip:bal>START_BAL?"text":"unset",WebkitTextFillColor:bal>START_BAL?"transparent":"#d4af37",animation:bal>START_BAL?"shimmer 3s linear infinite":"none"}}>Balance: ${bal}</span>
-          <button onClick={()=>{S.init();setSndOn(s=>!s);}} style={{background:"none",border:"1.5px solid rgba(255,255,255,.15)",borderRadius:12,color:sndOn?"#d4af37":"#555",cursor:"pointer",padding:"6px 14px",fontSize:24,minWidth:50,minHeight:46}}>{sndOn?"🔊":"🔇"}</button>
-          <button onClick={()=>{S.btn();setShowCount(v=>!v);}} style={{background:showCount?"rgba(245,215,110,.15)":"rgba(255,255,255,.08)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:12,color:"#d4af37",cursor:"pointer",padding:"6px 14px",fontSize:18,minHeight:46,letterSpacing:1}}>🃏 Count</button>
-          <button onClick={()=>{S.btn();setPhase(PH.SETUP);}} style={{padding:"8px 18px",fontSize:18,background:"rgba(255,255,255,.08)",color:"#8a8a6e",border:"1.5px solid rgba(255,255,255,.12)",borderRadius:12,cursor:"pointer",minHeight:46}}>New Game</button>
+      <div style={{display:"flex",alignItems:"center",flexWrap:"wrap",padding:R.top.pad,paddingRight:R.top.padR,background:"rgba(0,0,0,.7)",borderBottom:"2px solid #2a1a0a",flexShrink:0,gap:R.top.gap}}>
+          <span style={{color:"#d4af37",fontWeight:"bold",fontSize:R.top.title,fontFamily:"'Playfair Display','Georgia',serif",letterSpacing:R.mob?2:4}}>♠ BLACKJACK</span>
+          {!R.mob&&<span style={{color:"#8a8a6e",fontSize:R.top.info}}>Round {rnd}</span>}
+          <span style={{color:shoe.length<RESHUFFLE+10&&shoe.length>0?"#e67e22":"#8a8a6e",fontSize:R.top.info}}>{shoe.length}{R.mob?"":" cards"}{shoe.length>0&&shoe.length<RESHUFFLE+10?" ⚠":""}</span>
+          <span style={{color:"#d4af37",fontWeight:"bold",fontSize:R.mob?16:26,background:bal>START_BAL?"linear-gradient(90deg,#d4af37,#f5d76e,#d4af37)":"none",backgroundSize:"200% auto",WebkitBackgroundClip:bal>START_BAL?"text":"unset",WebkitTextFillColor:bal>START_BAL?"transparent":"#d4af37",animation:bal>START_BAL?"shimmer 3s linear infinite":"none"}}>${bal}</span>
+          <button onClick={()=>{S.init();setSndOn(s=>!s);}} style={{background:"none",border:"1.5px solid rgba(255,255,255,.15)",borderRadius:R.mob?8:12,color:sndOn?"#d4af37":"#555",cursor:"pointer",padding:R.mob?"4px 8px":"6px 14px",fontSize:R.mob?18:24,minWidth:R.mob?36:50,minHeight:R.mob?34:46}}>{sndOn?"🔊":"🔇"}</button>
+          <button onClick={()=>{S.btn();setShowCount(v=>!v);}} style={{background:showCount?"rgba(245,215,110,.15)":"rgba(255,255,255,.08)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:R.mob?8:12,color:"#d4af37",cursor:"pointer",padding:R.mob?"4px 8px":"6px 14px",fontSize:R.mob?13:18,minHeight:R.mob?34:46,letterSpacing:1}}>🃏{R.mob?"":" Count"}</button>
+          <button onClick={()=>{S.btn();setPhase(PH.SETUP);}} style={{padding:R.mob?"4px 10px":"8px 18px",fontSize:R.mob?13:18,background:"rgba(255,255,255,.08)",color:"#8a8a6e",border:"1.5px solid rgba(255,255,255,.12)",borderRadius:R.mob?8:12,cursor:"pointer",minHeight:R.mob?34:46}}>New{R.mob?"":" Game"}</button>
       </div>
 
       {/* TABLE FELT */}
@@ -546,16 +591,16 @@ function App(){
           <text x="500" y="250" textAnchor="middle" fill="rgba(241,210,65,0.2)" fontSize="13" fontFamily="Georgia,serif" letterSpacing="5">INSURANCE PAYS 2 TO 1</text>
         </svg>
 
-        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:5,textAlign:"center",padding:"10px 20px",fontSize:24,color:"#f5d76e",fontWeight:"bold",letterSpacing:3}}>{msg}</div>
+        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:5,textAlign:"center",padding:R.mob?"6px 10px":"10px 20px",fontSize:R.table.msgFont,color:"#f5d76e",fontWeight:"bold",letterSpacing:R.mob?1:3}}>{msg}</div>
 
         {/* CARD COUNTING PANEL */}
         {showCount&&(
-          <div style={{position:"absolute",top:8,right:8,zIndex:50,background:"rgba(6,14,10,.94)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:16,padding:"16px 20px",minWidth:280,maxHeight:"calc(100% - 16px)",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,.7)"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <span style={{fontSize:16,color:"#d4af37",fontWeight:"bold",letterSpacing:3,textTransform:"uppercase"}}>🃏 Card Count</span>
-              <button onClick={()=>setShowCount(false)} style={{background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:22,padding:0,lineHeight:1}}>×</button>
+          <div style={{position:"absolute",top:8,right:8,zIndex:50,background:"rgba(6,14,10,.94)",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:R.mob?10:16,padding:R.mob?"10px 12px":"16px 20px",minWidth:R.mob?220:280,maxHeight:"calc(100% - 16px)",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,.7)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:R.mob?8:12}}>
+              <span style={{fontSize:R.mob?12:16,color:"#d4af37",fontWeight:"bold",letterSpacing:R.mob?2:3,textTransform:"uppercase"}}>🃏 Card Count</span>
+              <button onClick={()=>setShowCount(false)} style={{background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:R.mob?18:22,padding:0,lineHeight:1}}>×</button>
             </div>
-            <div style={{fontSize:12,color:"#8a8a6e",marginBottom:10}}>
+            <div style={{fontSize:R.mob?10:12,color:"#8a8a6e",marginBottom:R.mob?6:10}}>
               {seenCards.length} of {shoe.length+seenCards.length} cards seen
               <div style={{marginTop:4,height:4,background:"rgba(255,255,255,.08)",borderRadius:2,overflow:"hidden"}}>
                 <div style={{height:"100%",background:"linear-gradient(90deg,#d4af37,#f5d76e)",borderRadius:2,width:`${(seenCards.length/(shoe.length+seenCards.length||1))*100}%`,transition:"width .3s"}}/>
@@ -567,58 +612,67 @@ function App(){
               const seenRanks={};seenInSuit.forEach(c=>{seenRanks[c.rank]=(seenRanks[c.rank]||0)+1;});
               const totalInSuit=numDk;
               return (
-                <div key={suit} style={{marginBottom:10}}>
-                  <div style={{fontSize:18,color:suitColor==="#1a1a2e"?"#aab":"#c0392b",fontWeight:"bold",marginBottom:4,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{fontSize:22}}>{suit}</span>
-                    <span style={{fontSize:12,color:"#8a8a6e",fontWeight:"normal"}}>{seenInSuit.length}/{13*numDk}</span>
+                <div key={suit} style={{marginBottom:R.mob?6:10}}>
+                  <div style={{fontSize:R.mob?14:18,color:suitColor==="#1a1a2e"?"#aab":"#c0392b",fontWeight:"bold",marginBottom:R.mob?2:4,display:"flex",alignItems:"center",gap:R.mob?4:6}}>
+                    <span style={{fontSize:R.mob?16:22}}>{suit}</span>
+                    <span style={{fontSize:R.mob?10:12,color:"#8a8a6e",fontWeight:"normal"}}>{seenInSuit.length}/{13*numDk}</span>
                   </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:R.mob?2:3}}>
                     {RANKS.map(rank=>{
                       const count=seenRanks[rank]||0;
                       const allSeen=count>=totalInSuit;
+                      const cw=R.mob?24:32,ch=R.mob?28:38;
                       return (
-                        <div key={rank} style={{width:32,height:38,borderRadius:4,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                        <div key={rank} style={{width:cw,height:ch,borderRadius:R.mob?3:4,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                           background:allSeen?"rgba(212,175,55,.15)":count>0?"rgba(255,255,255,.08)":"rgba(255,255,255,.02)",
                           border:allSeen?"1px solid rgba(212,175,55,.4)":count>0?"1px solid rgba(255,255,255,.15)":"1px solid rgba(255,255,255,.05)",
                           opacity:allSeen?.4:1}}>
-                          <span style={{fontSize:12,fontWeight:"bold",color:suitColor==="#1a1a2e"?"#aab":"#e07070",lineHeight:1}}>{rank}</span>
-                          <span style={{fontSize:9,color:count>0?"#d4af37":"#555",lineHeight:1,marginTop:1}}>{count}/{totalInSuit}</span>
+                          <span style={{fontSize:R.mob?9:12,fontWeight:"bold",color:suitColor==="#1a1a2e"?"#aab":"#e07070",lineHeight:1}}>{rank}</span>
+                          <span style={{fontSize:R.mob?7:9,color:count>0?"#d4af37":"#555",lineHeight:1,marginTop:1}}>{count}/{totalInSuit}</span>
                         </div>);
                     })}
                   </div>
                 </div>);
             })}
-            <div style={{borderTop:"1px solid rgba(255,255,255,.08)",paddingTop:8,marginTop:4}}>
-              <div style={{fontSize:12,color:"#8a8a6e",marginBottom:6}}>Running Count (Hi-Lo)</div>
+            <div style={{borderTop:"1px solid rgba(255,255,255,.08)",paddingTop:R.mob?6:8,marginTop:4}}>
+              <div style={{fontSize:R.mob?10:12,color:"#8a8a6e",marginBottom:R.mob?4:6}}>Running Count (Hi-Lo)</div>
               {(()=>{
                 let rc=0;seenCards.forEach(c=>{const v=cv(c);if(v<=6)rc++;else if(v>=10)rc--;});
                 const decksRem=Math.max((shoe.length)/52,.5);
                 const tc=Math.round(rc/decksRem*10)/10;
                 return (
-                  <div style={{display:"flex",gap:16}}>
-                    <div><span style={{fontSize:10,color:"#666"}}>RC: </span><span style={{fontSize:18,fontWeight:"bold",color:rc>0?"#27ae60":rc<0?"#e74c3c":"#d4af37"}}>{rc>0?"+":""}{rc}</span></div>
-                    <div><span style={{fontSize:10,color:"#666"}}>TC: </span><span style={{fontSize:18,fontWeight:"bold",color:tc>0?"#27ae60":tc<0?"#e74c3c":"#d4af37"}}>{tc>0?"+":""}{tc}</span></div>
+                  <div style={{display:"flex",gap:R.mob?10:16}}>
+                    <div><span style={{fontSize:R.mob?8:10,color:"#666"}}>RC: </span><span style={{fontSize:R.mob?14:18,fontWeight:"bold",color:rc>0?"#27ae60":rc<0?"#e74c3c":"#d4af37"}}>{rc>0?"+":""}{rc}</span></div>
+                    <div><span style={{fontSize:R.mob?8:10,color:"#666"}}>TC: </span><span style={{fontSize:R.mob?14:18,fontWeight:"bold",color:tc>0?"#27ae60":tc<0?"#e74c3c":"#d4af37"}}>{tc>0?"+":""}{tc}</span></div>
                   </div>);
               })()}
             </div>
           </div>
         )}
 
-        <div style={{position:"absolute",top:"4%",left:"50%",transform:"translateX(-50%)",zIndex:5,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
-          <div style={{fontSize:18,color:"rgba(212,175,55,.45)",letterSpacing:4,textTransform:"uppercase",fontWeight:"bold",background:"rgba(0,0,0,.3)",padding:"4px 20px",borderRadius:10}}>Dealer</div>
-          {dlr.cards.length>0&&(<div style={{display:"flex",justifyContent:"center"}}>{dlr.cards.map((c,i)=>(<Card key={`d${c.rank}${c.suit}${i}`} card={c} faceDown={!hole&&i===1} animated delay={i*.12} style={{marginLeft:i>0?-22:0,zIndex:i,position:"relative"}}/>))}</div>)}
-          {dlr.cards.length>0&&(<span style={{fontSize:24,fontWeight:"bold",color:"#fff",background:"rgba(0,0,0,.55)",padding:"4px 16px",borderRadius:12,letterSpacing:2}}>{hole?(dlrBJ?"BLACKJACK! 🃏":hv(dlr.cards)):`${cv(dlr.cards[0])} + ?`}</span>)}
+        <div style={{position:"absolute",top:R.mob?"2%":"4%",left:"50%",transform:"translateX(-50%)",zIndex:5,display:"flex",flexDirection:"column",alignItems:"center",gap:R.mob?2:5}}>
+          <div style={{fontSize:R.table.dlrFont,color:"rgba(212,175,55,.45)",letterSpacing:R.mob?2:4,textTransform:"uppercase",fontWeight:"bold",background:"rgba(0,0,0,.3)",padding:R.mob?"2px 12px":"4px 20px",borderRadius:R.mob?6:10}}>Dealer</div>
+          {dlr.cards.length>0&&(<div style={{display:"flex",justifyContent:"center"}}>{dlr.cards.map((c,i)=>(<Card key={`d${c.rank}${c.suit}${i}`} card={c} faceDown={!hole&&i===1} R={R.card} animated delay={i*.12} style={{marginLeft:i>0?(R.mob?-20:-22):0,zIndex:i,position:"relative"}}/>))}</div>)}
+          {dlr.cards.length>0&&(<span style={{fontSize:R.table.dlrValFont,fontWeight:"bold",color:"#fff",background:"rgba(0,0,0,.55)",padding:R.mob?"2px 10px":"4px 16px",borderRadius:R.mob?8:12,letterSpacing:R.mob?1:2}}>{hole?(dlrBJ?"BLACKJACK! 🃏":hv(dlr.cards)):`${cv(dlr.cards[0])} + ?`}</span>)}
         </div>
+
+        {/* DEALER ADVICE BUBBLE */}
+        {adv&&advice&&(
+          <>
+            <div onClick={()=>setAdv(false)} style={{position:"absolute",inset:0,zIndex:8999,cursor:"pointer"}}/>
+            <DealerBubble advice={advice} onClose={()=>setAdv(false)} mob={R.mob}/>
+          </>
+        )}
 
         {pls.map((p,pi)=>{
           const n=pls.length;
           const startA=210*(Math.PI/180),endA=330*(Math.PI/180);
           const ang=n===1?270*(Math.PI/180):startA+(endA-startA)*(pi/(n-1));
-          const cx=50,cy=5,rx=42,ry=70;
+          const cx=50,cy=R.mob?8:5,rx=R.mob?40:42,ry=R.table.ry;
           const px=cx+rx*Math.cos(ang),py=cy-ry*Math.sin(ang);
           return (
             <div key={pi} style={{position:"absolute",left:`${px}%`,top:`${py}%`,transform:"translate(-50%,-50%)",zIndex:p.isHuman?10:5}}>
-              <PlayerSeat player={p} pi={pi} activePI={aPI} activeHI={aHI} phase={phase} dealerCards={dlr.cards} showHole={hole} betChips={betChips}/>
+              <PlayerSeat player={p} pi={pi} activePI={aPI} activeHI={aHI} phase={phase} dealerCards={dlr.cards} showHole={hole} betChips={betChips} R={R}/>
             </div>);
         })}
       </div>
@@ -627,51 +681,53 @@ function App(){
       {shuffling&&(
         <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(4,8,4,.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"shuffleOverlayIn .5s ease both"}}>
           {/* Animated card backs */}
-          <div style={{position:"relative",width:300,height:220,marginBottom:30}}>
+          <div style={{position:"relative",width:R.mob?180:300,height:R.mob?140:220,marginBottom:R.mob?16:30}}>
             {[
               {anim:"shuffleCard1",x:0,y:0,rot:-12,delay:0},
-              {anim:"shuffleCard2",x:40,y:-5,rot:8,delay:.15},
-              {anim:"shuffleCard3",x:80,y:2,rot:-4,delay:.3},
-              {anim:"shuffleCard4",x:20,y:15,rot:16,delay:.45},
-              {anim:"shuffleCard5",x:60,y:10,rot:-8,delay:.6},
-              {anim:"shuffleCard6",x:100,y:-8,rot:3,delay:.75},
-            ].map((c,i)=>(
-              <div key={i} style={{position:"absolute",left:c.x,top:50+c.y,width:90,height:130,borderRadius:10,
-                background:"linear-gradient(135deg,#8b0000,#a20000,#8b0000)",border:"2.5px solid #555",
+              {anim:"shuffleCard2",x:R.mob?24:40,y:-5,rot:8,delay:.15},
+              {anim:"shuffleCard3",x:R.mob?48:80,y:2,rot:-4,delay:.3},
+              {anim:"shuffleCard4",x:R.mob?12:20,y:R.mob?10:15,rot:16,delay:.45},
+              {anim:"shuffleCard5",x:R.mob?36:60,y:10,rot:-8,delay:.6},
+              {anim:"shuffleCard6",x:R.mob?60:100,y:-8,rot:3,delay:.75},
+            ].map((c,i)=>{
+              const cw=R.mob?54:90,ch=R.mob?78:130;
+              return (
+              <div key={i} style={{position:"absolute",left:c.x,top:(R.mob?30:50)+c.y,width:cw,height:ch,borderRadius:R.mob?6:10,
+                background:"linear-gradient(135deg,#8b0000,#a20000,#8b0000)",border:`${R.mob?1.5:2.5}px solid #555`,
                 boxShadow:"3px 4px 16px rgba(0,0,0,.6)",
                 animation:`${c.anim} 1.8s cubic-bezier(.25,.46,.45,.94) ${c.delay}s infinite alternate, shuffleRiffle .4s ease ${c.delay+.8}s infinite`,
                 transform:`rotate(${c.rot}deg)`}}>
-                <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.04) 5px,rgba(255,255,255,.04) 6px)",borderRadius:8}}/>
-                <div style={{position:"absolute",inset:6,border:"1.5px solid rgba(255,200,100,.15)",borderRadius:5}}/>
-                <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:28,opacity:.2,color:"#ffd700"}}>♠</div>
-              </div>
-            ))}
+                <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.04) 5px,rgba(255,255,255,.04) 6px)",borderRadius:R.mob?4:8}}/>
+                <div style={{position:"absolute",inset:R.mob?3:6,border:"1.5px solid rgba(255,200,100,.15)",borderRadius:R.mob?3:5}}/>
+                <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:R.mob?18:28,opacity:.2,color:"#ffd700"}}>♠</div>
+              </div>);
+            })}
             {/* Deck pile in center */}
-            <div style={{position:"absolute",left:115,top:55,width:90,height:130,animation:"shuffleFan .6s ease-in-out infinite alternate"}}>
+            <div style={{position:"absolute",left:R.mob?68:115,top:R.mob?34:55,width:R.mob?54:90,height:R.mob?78:130,animation:"shuffleFan .6s ease-in-out infinite alternate"}}>
               {[0,1,2,3,4].map(i=>(
-                <div key={i} style={{position:"absolute",left:i*1.5,top:-i*1.5,width:90,height:130,borderRadius:10,
-                  background:"linear-gradient(135deg,#7a0000,#900000,#7a0000)",border:"2px solid #444",
+                <div key={i} style={{position:"absolute",left:i*1.5,top:-i*1.5,width:R.mob?54:90,height:R.mob?78:130,borderRadius:R.mob?6:10,
+                  background:"linear-gradient(135deg,#7a0000,#900000,#7a0000)",border:`${R.mob?1.5:2}px solid #444`,
                   boxShadow:"1px 2px 6px rgba(0,0,0,.4)"}}>
-                  <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.03) 5px,rgba(255,255,255,.03) 6px)",borderRadius:8}}/>
+                  <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.03) 5px,rgba(255,255,255,.03) 6px)",borderRadius:R.mob?4:8}}/>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Text */}
-          <div style={{fontSize:36,fontWeight:"bold",color:"#d4af37",fontFamily:"'Playfair Display','Georgia',serif",
-            letterSpacing:10,animation:"shuffleTextPulse 1.5s ease-in-out infinite",marginBottom:16}}>
+          <div style={{fontSize:R.mob?24:36,fontWeight:"bold",color:"#d4af37",fontFamily:"'Playfair Display','Georgia',serif",
+            letterSpacing:R.mob?6:10,animation:"shuffleTextPulse 1.5s ease-in-out infinite",marginBottom:R.mob?8:16}}>
             SHUFFLING
           </div>
-          <div style={{fontSize:18,color:"#8a8a6e",letterSpacing:4,marginBottom:8}}>
+          <div style={{fontSize:R.mob?14:18,color:"#8a8a6e",letterSpacing:R.mob?2:4,marginBottom:R.mob?4:8}}>
             {numDk} deck{numDk>1?"s":""} · {numDk*52} cards
           </div>
-          <div style={{fontSize:16,color:"#e67e22",letterSpacing:2,marginBottom:30,animation:"pulse 1s ease-in-out infinite"}}>
+          <div style={{fontSize:R.mob?13:16,color:"#e67e22",letterSpacing:2,marginBottom:R.mob?16:30,animation:"pulse 1s ease-in-out infinite"}}>
             🃏 Card count reset
           </div>
 
           {/* Progress bar */}
-          <div style={{width:280,height:6,background:"rgba(255,255,255,.08)",borderRadius:3,overflow:"hidden"}}>
+          <div style={{width:R.mob?200:280,height:6,background:"rgba(255,255,255,.08)",borderRadius:3,overflow:"hidden"}}>
             <div style={{height:"100%",background:"linear-gradient(90deg,#d4af37,#f5d76e,#d4af37)",borderRadius:3,
               animation:"shuffleProgressFill 4.2s ease-in-out both"}}/>
           </div>
@@ -679,53 +735,52 @@ function App(){
       )}
 
       {/* BOTTOM ACTION BAR */}
-      <div style={{padding:"clamp(8px,1.5vh,16px) 20px",background:"linear-gradient(180deg,#1a1008,#0f0a04)",borderTop:"2px solid #2a1a0a",flexShrink:0}}>
+      <div style={{padding:R.mob?"clamp(4px,1vh,8px) 8px":"clamp(8px,1.5vh,16px) 20px",background:"linear-gradient(180deg,#1a1008,#0f0a04)",borderTop:"2px solid #2a1a0a",flexShrink:0,position:"relative",zIndex:100}}>
         {phase===PH.BET&&(
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"clamp(8px,1.2vh,14px)"}}>
-            <div style={{display:"flex",gap:"clamp(6px,.8vw,12px)",flexWrap:"wrap",justifyContent:"center"}}>
-              {CHIPS.map(v=><Chip key={v} value={v} size={88} onClick={addChip} disabled={bet+v>Math.min(bal,MAX_BET)}/>)}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:R.mob?"clamp(4px,.8vh,8px)":"clamp(8px,1.2vh,14px)"}}>
+            <div style={{display:"flex",gap:R.mob?4:R.bot.chipGap,flexWrap:"wrap",justifyContent:"center"}}>
+              {CHIPS.map(v=><Chip key={v} value={v} size={R.chip} onClick={addChip} disabled={bet+v>Math.min(bal,MAX_BET)}/>)}
             </div>
-            <div style={{display:"flex",gap:20,alignItems:"center"}}>
-              <span style={{fontSize:38,fontWeight:"bold",color:"#f5d76e",fontFamily:"'Playfair Display','Georgia',serif",minWidth:90,textAlign:"center"}}>${bet}</span>
-              <button onClick={clearBet} style={{padding:"12px 28px",fontSize:20,background:"rgba(255,255,255,.08)",color:"#aaa",border:"1.5px solid rgba(255,255,255,.12)",borderRadius:14,cursor:"pointer",minHeight:52}}>Clear</button>
-              {lastBet>0&&<button onClick={repeatBet} disabled={lastBet>Math.min(bal,MAX_BET)} style={{padding:"12px 28px",fontSize:20,fontWeight:"bold",background:lastBet<=Math.min(bal,MAX_BET)?"rgba(212,175,55,.15)":"rgba(255,255,255,.04)",color:lastBet<=Math.min(bal,MAX_BET)?"#d4af37":"#555",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:14,cursor:lastBet<=Math.min(bal,MAX_BET)?"pointer":"not-allowed",minHeight:52,letterSpacing:1}}>🔁 ${lastBet}</button>}
-              <button onClick={placeBet} disabled={bet<MIN_BET} style={{padding:"14px 52px",fontSize:26,fontWeight:"bold",letterSpacing:5,background:bet>=MIN_BET?"linear-gradient(180deg,#d4af37,#b8972e)":"rgba(255,255,255,.05)",color:bet>=MIN_BET?"#1a1a0e":"#555",border:"none",borderRadius:16,cursor:bet>=MIN_BET?"pointer":"not-allowed",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",minHeight:58}}>Deal</button>
+            <div style={{display:"flex",gap:R.mob?8:20,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}}>
+              <span style={{fontSize:R.bot.betFont,fontWeight:"bold",color:"#f5d76e",fontFamily:"'Playfair Display','Georgia',serif",minWidth:R.mob?50:90,textAlign:"center"}}>${bet}</span>
+              <button onClick={clearBet} style={{padding:R.bot.btnPad,fontSize:R.bot.btnFont,background:"rgba(255,255,255,.08)",color:"#aaa",border:"1.5px solid rgba(255,255,255,.12)",borderRadius:R.mob?8:14,cursor:"pointer",minHeight:R.mob?36:52}}>Clear</button>
+              {lastBet>0&&<button onClick={repeatBet} disabled={lastBet>Math.min(bal,MAX_BET)} style={{padding:R.bot.btnPad,fontSize:R.bot.btnFont,fontWeight:"bold",background:lastBet<=Math.min(bal,MAX_BET)?"rgba(212,175,55,.15)":"rgba(255,255,255,.04)",color:lastBet<=Math.min(bal,MAX_BET)?"#d4af37":"#555",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:R.mob?8:14,cursor:lastBet<=Math.min(bal,MAX_BET)?"pointer":"not-allowed",minHeight:R.mob?36:52,letterSpacing:1}}>🔁 ${lastBet}</button>}
+              <button onClick={placeBet} disabled={bet<MIN_BET} style={{padding:R.bot.dealPad,fontSize:R.bot.dealFont,fontWeight:"bold",letterSpacing:R.mob?2:5,background:bet>=MIN_BET?"linear-gradient(180deg,#d4af37,#b8972e)":"rgba(255,255,255,.05)",color:bet>=MIN_BET?"#1a1a0e":"#555",border:"none",borderRadius:R.mob?10:16,cursor:bet>=MIN_BET?"pointer":"not-allowed",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",minHeight:R.mob?40:58}}>Deal</button>
             </div>
           </div>)}
 
         {phase===PH.INS&&(
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:16}}>
-            <div style={{fontSize:24,color:"#f5d76e"}}>Insurance costs ${Math.min(Math.floor(bet/2),bal)}</div>
-            <div style={{display:"flex",gap:16}}>
-              <button onClick={()=>handleIns(true)} disabled={bal<Math.floor(bet/2)} style={{padding:"14px 40px",fontSize:22,fontWeight:"bold",background:"linear-gradient(180deg,#27ae60,#1e8449)",color:"#fff",border:"none",borderRadius:16,cursor:"pointer",minHeight:56}}>Yes, Insure</button>
-              <button onClick={()=>handleIns(false)} style={{padding:"14px 40px",fontSize:22,fontWeight:"bold",background:"rgba(255,255,255,.08)",color:"#ccc",border:"1.5px solid rgba(255,255,255,.15)",borderRadius:16,cursor:"pointer",minHeight:56}}>No Thanks</button>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:R.mob?8:16}}>
+            <div style={{fontSize:R.mob?16:24,color:"#f5d76e"}}>Insurance costs ${Math.min(Math.floor(bet/2),bal)}</div>
+            <div style={{display:"flex",gap:R.mob?10:16}}>
+              <button onClick={()=>handleIns(true)} disabled={bal<Math.floor(bet/2)} style={{padding:R.mob?"10px 24px":"14px 40px",fontSize:R.mob?16:22,fontWeight:"bold",background:"linear-gradient(180deg,#27ae60,#1e8449)",color:"#fff",border:"none",borderRadius:R.mob?10:16,cursor:"pointer",minHeight:R.mob?40:56}}>Yes, Insure</button>
+              <button onClick={()=>handleIns(false)} style={{padding:R.mob?"10px 24px":"14px 40px",fontSize:R.mob?16:22,fontWeight:"bold",background:"rgba(255,255,255,.08)",color:"#ccc",border:"1.5px solid rgba(255,255,255,.15)",borderRadius:R.mob?10:16,cursor:"pointer",minHeight:R.mob?40:56}}>No Thanks</button>
             </div>
           </div>)}
 
         {phase===PH.PLAY&&myTurn&&curH&&!curH.result&&(
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
-            <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
-              <ActBtn label="Hit" onClick={()=>act("hit")} color="#27ae60"/>
-              <ActBtn label="Stand" onClick={()=>act("stand")} color="#c0392b"/>
-              <ActBtn label="Double" onClick={()=>act("double")} disabled={curH.cards.length!==2||bal<curH.bet} color="#2980b9"/>
-              <ActBtn label="Split" onClick={()=>act("split")} disabled={!canSp(curH)||bal<curH.bet} color="#8e44ad"/>
-              <ActBtn label="Surrender" onClick={()=>act("surrender")} disabled={curH.cards.length!==2||curH.isSplit} color="#7f8c8d"/>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:R.mob?6:12}}>
+            <div style={{display:"flex",justifyContent:"center",gap:R.mob?4:10,flexWrap:"wrap"}}>
+              <ActBtn label="Hit" onClick={()=>act("hit")} color="#27ae60" R={R.act}/>
+              <ActBtn label="Stand" onClick={()=>act("stand")} color="#c0392b" R={R.act}/>
+              <ActBtn label="Double" onClick={()=>act("double")} disabled={curH.cards.length!==2||bal<curH.bet} color="#2980b9" R={R.act}/>
+              <ActBtn label="Split" onClick={()=>act("split")} disabled={!canSp(curH)||bal<curH.bet} color="#8e44ad" R={R.act}/>
+              <ActBtn label="Surrender" onClick={()=>act("surrender")} disabled={curH.cards.length!==2||curH.isSplit} color="#7f8c8d" R={R.act}/>
             </div>
-            <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center"}}>
-              {adv&&advice&&<StratTip advice={advice} onClose={()=>setAdv(false)}/>}
-              <button onClick={()=>{S.btn();setAdv(a=>!a);}} style={{padding:"10px 30px",fontSize:20,fontWeight:"bold",background:adv?"rgba(245,215,110,.15)":"rgba(255,255,255,.06)",color:"#d4af37",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:26,cursor:"pointer",letterSpacing:3,transition:"all .25s",minHeight:50}}>💡 What should I do?</button>
+            <div style={{display:"inline-flex",flexDirection:"column",alignItems:"center"}}>
+              <button onClick={()=>{S.btn();setAdv(a=>!a);}} style={{padding:R.mob?"6px 16px":"10px 30px",fontSize:R.mob?14:20,fontWeight:"bold",background:adv?"rgba(245,215,110,.15)":"rgba(255,255,255,.06)",color:"#d4af37",border:"1.5px solid rgba(212,175,55,.35)",borderRadius:R.mob?16:26,cursor:"pointer",letterSpacing:R.mob?1:3,transition:"all .25s",minHeight:R.mob?34:50}}>💡 {R.mob?"Advice":"What should I do?"}</button>
             </div>
           </div>)}
 
-        {phase===PH.PLAY&&!myTurn&&<div style={{textAlign:"center",color:"#8a8a6e",fontSize:22,padding:12,animation:"pulse 1.5s ease-in-out infinite"}}>Waiting for other players...</div>}
-        {phase===PH.DEALER&&<div style={{textAlign:"center",color:"#f5d76e",fontSize:24,padding:12,letterSpacing:3,animation:"pulse 1.2s ease-in-out infinite"}}>Dealer is playing...</div>}
+        {phase===PH.PLAY&&!myTurn&&<div style={{textAlign:"center",color:"#8a8a6e",fontSize:R.mob?16:22,padding:R.mob?6:12,animation:"pulse 1.5s ease-in-out infinite"}}>Waiting for other players...</div>}
+        {phase===PH.DEALER&&<div style={{textAlign:"center",color:"#f5d76e",fontSize:R.mob?18:24,padding:R.mob?6:12,letterSpacing:R.mob?1:3,animation:"pulse 1.2s ease-in-out infinite"}}>Dealer is playing...</div>}
 
         {phase===PH.END&&(
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-            <div style={{display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center"}}>
-              {humanP.hands.map((h,i)=>{const clr=h.result==="WIN"||h.result==="BLACKJACK"?"#27ae60":h.result==="PUSH"?"#f39c12":"#c0392b";return (<span key={i} style={{fontSize:26,fontWeight:"bold",color:clr,animation:"fadeUp .4s ease both",animationDelay:`${i*.15}s`}}>{humanP.hands.length>1?`Hand ${i+1}: `:""}{h.result}{h.result==="BLACKJACK"?" 🎉":""}</span>);})}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:R.mob?8:14}}>
+            <div style={{display:"flex",gap:R.mob?8:16,flexWrap:"wrap",justifyContent:"center"}}>
+              {humanP.hands.map((h,i)=>{const clr=h.result==="WIN"||h.result==="BLACKJACK"?"#27ae60":h.result==="PUSH"?"#f39c12":"#c0392b";return (<span key={i} style={{fontSize:R.mob?18:26,fontWeight:"bold",color:clr,animation:"fadeUp .4s ease both",animationDelay:`${i*.15}s`}}>{humanP.hands.length>1?`Hand ${i+1}: `:""}{h.result}{h.result==="BLACKJACK"?" 🎉":""}</span>);})}
             </div>
-            <button onClick={nextRound} style={{padding:"16px 60px",fontSize:26,fontWeight:"bold",letterSpacing:5,background:"linear-gradient(180deg,#d4af37,#b8972e)",color:"#1a1a0e",border:"none",borderRadius:16,cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",boxShadow:"0 5px 24px rgba(212,175,55,.3)",transition:"all .25s",minHeight:60}}
+            <button onClick={nextRound} style={{padding:R.mob?"10px 32px":"16px 60px",fontSize:R.mob?18:26,fontWeight:"bold",letterSpacing:R.mob?2:5,background:"linear-gradient(180deg,#d4af37,#b8972e)",color:"#1a1a0e",border:"none",borderRadius:R.mob?10:16,cursor:"pointer",fontFamily:"'Playfair Display','Georgia',serif",textTransform:"uppercase",boxShadow:"0 5px 24px rgba(212,175,55,.3)",transition:"all .25s",minHeight:R.mob?42:60}}
               onMouseOver={e=>e.target.style.transform="translateY(-3px)"} onMouseOut={e=>e.target.style.transform="none"}>{bal<MIN_BET?"Game Over":"Next Hand"}</button>
           </div>)}
       </div>
