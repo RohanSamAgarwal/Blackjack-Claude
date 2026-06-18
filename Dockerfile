@@ -11,6 +11,9 @@ FROM nginx:alpine
 COPY blackjack.html /usr/share/nginx/html/index.html
 COPY blackjack.jsx /usr/share/nginx/html/blackjack.jsx
 
+# Copy favicon / PWA assets (served from the site root)
+COPY favicon.svg favicon.ico favicon-16.png favicon-32.png favicon-48.png apple-touch-icon.png favicon-192.png favicon-512.png site.webmanifest /usr/share/nginx/html/
+
 # Use a custom nginx config for clean URL handling
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
