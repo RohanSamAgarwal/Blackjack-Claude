@@ -1,20 +1,24 @@
 # =============================================================================
-#  Blackjack — Static Site Docker Build
-# =============================================================================
-#  Serves the blackjack game as static files using nginx.
-#  The game is a single HTML file + JSX that runs entirely in the browser.
+#  Blackjack — multi-stage build. Stage 1 builds the React client; stage 2 runs
+#  the Node server (Express + Socket.IO) serving the built client on one port.
 # =============================================================================
 
-FROM nginx:alpine
+# --- Stage 1: build the client ----------------------------------------------
+FROM node:20-alpine AS client-build
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
+RUN npm run build
 
-# Copy game files to nginx's default serve directory
-COPY blackjack.html /usr/share/nginx/html/index.html
-COPY blackjack.jsx /usr/share/nginx/html/blackjack.jsx
+# --- Stage 2: server runtime -------------------------------------------------
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY server/ ./server/
+COPY --from=client-build /app/client/dist ./client/dist
 
-# Copy favicon / PWA assets (served from the site root)
-COPY favicon.svg favicon.ico favicon-16.png favicon-32.png favicon-48.png apple-touch-icon.png favicon-192.png favicon-512.png site.webmanifest /usr/share/nginx/html/
-
-# Use a custom nginx config for clean URL handling
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
+EXPOSE 3004
+CMD ["node", "server/index.js"]
