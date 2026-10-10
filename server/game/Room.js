@@ -10,7 +10,7 @@
 import { Shoe, handValue, isSoft, isBlackjack, canSplit, hiLoValue } from './cards.js';
 import { playDealer, resolveHand, resolveInsurance } from './round.js';
 import { aiDecision, aiBet, BOT_SKILLS } from './bot.js';
-import { autoAction } from './strategy.js';
+import { autoAction, advise } from './strategy.js';
 import { settleSession } from './settlement.js';
 import { defaultSettings, normalizeSettings } from './settings.js';
 
@@ -662,11 +662,27 @@ export class Room {
     });
 
     const assists = this.settings.assists;
+
+    // "Ask the dealer": computed server-side for the viewer when it's their turn.
+    let advice = null;
+    if (assists.advisor && this.phase === 'playing' && this.active && me && this.active.seatIndex === me.seatIndex) {
+      const seat = this.seats[this.active.seatIndex];
+      const hand = seat && seat.hands[this.active.handIndex];
+      if (hand && !hand.done) {
+        advice = advise(hand, this.dealer.cards[0], {
+          canDouble: seat.chips >= hand.bet,
+          canSplit: this.settings && seat.chips >= hand.bet,
+          canSurrender: this.settings.allowSurrender,
+        });
+      }
+    }
+
     return {
       code: this.code,
       phase: this.phase,
       you: me ? { playerId: me.id, seatIndex: me.seatIndex, isHost: me.isHost, isBanker: mySeat === this.bankerSeat } : null,
       settings: this.settings,
+      advice,
       seats,
       bankerSeat: this.bankerSeat,
       dealer: this._dealerView(),
