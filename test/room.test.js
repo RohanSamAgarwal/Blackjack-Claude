@@ -83,3 +83,30 @@ test('endSession produces a balanced settlement', () => {
   assert.equal(transfers.length, 1);
   assert.equal(transfers[0].amount, 10);
 });
+
+test('turn timer auto-finishes a hand by basic strategy and stops (no new hand)', () => {
+  // seat 0 gets 10,6 = 16 vs dealer upcard 10 → autoAction hits; draws 5 → 21.
+  const shoe = pad([c('10'), c('10'), c('6'), c('7'), c('5')]);
+  let fired = null;
+  const room = new Room('TMR', {
+    shoe,
+    settings: { turnTimer: { enabled: true, seconds: 30 } },
+    setTimeout: (fn) => { fired = fn; return 1; },
+    clearTimeout: () => {},
+  });
+  const host = room.join({ name: 'Host', socketId: 's1' });
+  room.startGame(host.id);
+  room.placeBet(host.id, 10);
+  room.deal(host.id);
+
+  assert.equal(room.phase, 'playing');
+  assert.equal(room.active.seatIndex, 0);
+  assert.ok(room.turnDeadline, 'a deadline is set while a human is on the clock');
+  assert.ok(fired, 'a timer was scheduled');
+
+  fired(); // simulate the clock expiring
+
+  assert.equal(room.phase, 'roundEnd');               // round finished automatically
+  assert.equal(room.seats[0].hands[0].cards.length, 3); // auto-hit exactly once (16 → 21)
+  assert.equal(room.seats[0].hands[0].done, true);
+});
