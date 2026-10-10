@@ -56,7 +56,7 @@ function Seat({ seat, state }) {
       <div className="hands">
         {seat.hands.length === 0
           ? <div className="muted small nohand">{state.phase === 'betting' ? (seat.bet > 0 ? `Bet $${seat.bet}` : 'No bet') : 'Sitting out'}</div>
-          : seat.hands.map((h, i) => <HandView key={i} hand={h} tags={state.settings.assists.hiLoTags} isActive={activeHand === i} scale={0.62} />)}
+          : seat.hands.map((h, i) => <HandView key={i} hand={h} tags={state.settings.assists.hiLoTags} isActive={activeHand === i} scale={seat.hands.length > 1 ? 0.5 : 0.62} />)}
       </div>
       <div className="seat-bottom">
         <span className="chips">{seat.chips.toLocaleString()}</span>

@@ -84,6 +84,29 @@ test('endSession produces a balanced settlement', () => {
   assert.equal(transfers[0].amount, 10);
 });
 
+test('a banker who also plays shows a net equal to their real chip change', () => {
+  // seat0 (banker) 7,K=17 and seat1 8,K=18 both lose to a dealer blackjack.
+  const shoe = pad([c('7'), c('8'), c('A'), c('K'), c('K'), c('10')]);
+  const room = new Room('BNK', { shoe, settings: { allowInsurance: false } });
+  const host = room.join({ name: 'Host', socketId: 's1' }); // seat 0, banker
+  const pat = room.join({ name: 'Pat', socketId: 's2' });    // seat 1
+  room.startGame(host.id);
+  room.placeBet(host.id, 25);
+  room.placeBet(pat.id, 25);
+  room.deal(host.id); // dealer has blackjack → resolves immediately
+
+  assert.equal(room.phase, 'roundEnd');
+  const res = room.lastRound.results;
+  const hostNet = res.find((r) => r.seatIndex === 0).net;
+  const patNet = res.find((r) => r.seatIndex === 1).net;
+  // Pat simply lost 25; the banker lost their own hand (−25) but collected the
+  // house take (+50), a +25 net that matches their chip change.
+  assert.equal(patNet, -25);
+  assert.equal(hostNet, 25);
+  assert.equal(room.seats[0].chips, 775); // 750 + 25
+  assert.equal(room.seats[1].chips, 725); // 750 − 25
+});
+
 test('turn timer auto-finishes a hand by basic strategy and stops (no new hand)', () => {
   // seat 0 gets 10,6 = 16 vs dealer upcard 10 → autoAction hits; draws 5 → 21.
   const shoe = pad([c('10'), c('10'), c('6'), c('7'), c('5')]);

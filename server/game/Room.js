@@ -492,9 +492,15 @@ export class Room {
     }
 
     // The banker is the house: assign the negative of all players' net so chips
-    // are conserved and the banker's own hand (if any) nets out to a wash.
+    // are conserved and the banker's own hand (if any) nets out to a wash. Fold
+    // that house delta into the banker's displayed net so the badge matches the
+    // banker's actual chip change (and show a net even when the banker sat out).
     if (this.bankerSeat != null && this.seats[this.bankerSeat]) {
-      this.seats[this.bankerSeat].chips += -playersNet;
+      const bank = this.seats[this.bankerSeat];
+      bank.chips += -playersNet;
+      const bankResult = results.find((r) => r.seatIndex === this.bankerSeat);
+      if (bankResult) bankResult.net += -playersNet;
+      else results.push({ seatIndex: this.bankerSeat, name: bank.name, net: -playersNet, hands: [], houseOnly: true });
     }
 
     this.lastRound = { results, dealer: this.dealer.cards, housePaid: -playersNet };

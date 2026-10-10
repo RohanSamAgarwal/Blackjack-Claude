@@ -150,7 +150,7 @@ input:focus, select:focus { border-color: var(--gold); }
 
 /* ---- Lobby ---------------------------------------------------------------- */
 .lobby { max-width: 980px; margin: 0 auto; padding: 20px 16px 120px; width: 100%; }
-.lobby-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
+.lobby-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; padding-right: 52px; }
 .lobby-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .panel { background: rgba(10,25,16,.7); border: 1.5px solid var(--gold-dim); border-radius: 16px; padding: 18px; }
 .panel h3 { font-size: 18px; margin-bottom: 12px; }
@@ -191,7 +191,7 @@ input:focus, select:focus { border-color: var(--gold); }
 
 /* ---- Table ---------------------------------------------------------------- */
 .table { min-height: 100vh; display: flex; flex-direction: column; }
-.table-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+.table-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; padding-right: 56px; }
 .top-mid { display: flex; align-items: center; gap: 12px; }
 .btn.sm { padding: 7px 14px; font-size: 13px; }
 .count { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--gold-soft); background: rgba(0,0,0,.4); padding: 3px 10px; border-radius: 8px; border: 1px solid var(--gold-dim); }
@@ -212,7 +212,7 @@ input:focus, select:focus { border-color: var(--gold); }
 @keyframes seatGlow { 0%,100% { box-shadow: 0 0 0 2px var(--gold), 0 0 12px rgba(212,175,55,.3); } 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 26px rgba(212,175,55,.6); } }
 .seat-top { display: flex; justify-content: space-between; align-items: center; }
 .seat-top .nm { font-weight: 600; font-size: 14px; }
-.hands { display: flex; flex-direction: column; gap: 8px; }
+.hands { display: flex; flex-flow: row wrap; gap: 8px; justify-content: center; }
 .nohand { padding: 14px 0; text-align: center; }
 .hand { padding: 4px; border-radius: 8px; }
 .hand.active { background: rgba(212,175,55,.1); }
