@@ -1,28 +1,58 @@
-# Blackjack — Built with Claude in ~4 Hours
+# Blackjack — play with friends
 
-This is a fully-featured browser-based blackjack game with a realistic casino table, animated cards and chips, sound effects, AI opponents, and even a built-in card counting tool. It runs entirely in your browser — no downloads, no installs.
+A self-hosted, real-time multiplayer blackjack table in the same mould as the
+Kamino **Poker** game: the first visitor hosts, configures the table, and shares
+a room code for friends to join. Play a session together, buy in for chips, and
+at the end see the net result per player and a **who-owes-whom** settlement
+(tracking only — no real money moves).
 
-## The Backstory
+> Originally a single-player browser game built with Claude; rebuilt as a
+> multiplayer app (React + Express + Socket.IO) on the Poker stack.
 
-Back at Purdue, my final project for my C programming class was a text-based blackjack game. It took me nearly 4 weeks and well over 25 hours to build — no graphics, no animations, just text in a terminal. It was one of the hardest projects I'd tackled at the time.
+## What it does
 
-Years later, I decided to revisit the idea, but this time with a twist: I'd use Claude, Anthropic's AI assistant, to help me build it. This was my first time using Claude to code anything. Over the course of about 4 hours of back-and-forth conversation, we went from nothing to a polished, visual blackjack game that's lightyears beyond what I built in college.
+- **Live multiplayer rooms** — host/room-code join, up to 6 seats, real-time
+  state for everyone at the table, reconnect after a refresh or drop.
+- **Buy-in & settlement** — each player buys in for chips; the **banker** is the
+  house (covers wins, collects losses), so at session end the nets sum to zero
+  and the who-owes-whom breakdown closes exactly. Rebuys supported.
+- **Full blackjack** — 1–8 deck shoe, split / double / surrender / insurance,
+  configurable dealer rules (S17 / H17) and blackjack payout (3:2 or 6:5).
+- **AI bots** — fill empty seats with beginner / basic-strategy / aggressive
+  bots; solo play is just you plus bots.
+- **Optional assists (host toggles, off by default):** "ask the dealer"
+  basic-strategy hints, a Hi-Lo running/true count readout, and per-card high/low
+  tags.
+- **Optional turn timer** — on expiry the server auto-finishes the hand by basic
+  strategy from the table cards only (no count, no new wager) and stops; it never
+  auto-starts the next hand.
 
-## What It Does
+## Architecture
 
-- Realistic semicircular casino table with felt texture and gold trim
-- Animated card dealing, chip stacking, and result effects
-- Sound effects for every action — cards, chips, wins, losses, shuffles
-- 1–3 AI opponents with different play styles (beginner, basic strategy, aggressive)
-- Full rule support: split, double down, insurance, surrender
-- Built-in strategy advisor that tells you the optimal play
-- Card counting panel with Hi-Lo running and true counts
-- A dramatic shuffle animation when the deck runs low
-- Configurable 1–4 deck shoe
-- ...and a hidden easter egg for the lucky ones 🍀
+- **Server** — Express + Socket.IO (`server/`). Authoritative in-memory game
+  state; the dealer is automated and the designated banker is the money
+  counterparty, so chips are conserved every round. Serves the built client on
+  one port (`3004`, base path `/blackjack`).
+  - `server/game/` — the pure, unit-tested engine: `cards`, `round` (dealer play
+    + outcomes), `strategy` (advisor + count-free timeout play), `bot`,
+    `settlement`, `settings`, plus `Room` / `RoomManager` and the socket
+    protocol (`types/protocol.js`).
+- **Client** — React + Vite (`client/`), served under base path `/blackjack/`.
+  A `useRoom()` hook holds the server-authoritative state; components render
+  Landing → Lobby → Table → Settlement.
+- **Deploy** — multi-stage Dockerfile (build client → run Node), its own
+  container, path-routed at `/blackjack/` behind Caddy on the Kamino homeserver.
 
-## What Surprised Me
+## Develop
 
-What took me almost a month in C took about 4 hours with Claude — and the end result has animated graphics, sound, AI players, and features I never would have attempted on my own. It's a pretty striking example of how AI tools are changing what's possible for a solo developer. I described what I wanted in plain English, iterated on the design visually, and Claude handled the implementation.
+```bash
+npm install                 # server deps
+npm --prefix client install # client deps
+npm test                    # engine + room test suite (node:test)
 
-[**Play Blackjack →**](https://rohansamagarwal.github.io/Blackjack-Claude/blackjack.html)
+# Local run (two terminals):
+npm start                   # server on :3004 (serves the built client)
+npm run dev:client          # Vite dev server with a socket proxy to :3004
+```
+
+The previous single-player version is preserved under `legacy/` for reference.
