@@ -84,6 +84,42 @@ test('endSession produces a balanced settlement', () => {
   assert.equal(transfers[0].amount, 10);
 });
 
+test('splitting a pair makes two staked hands and moves the active pointer', () => {
+  // seat0 is dealt 8,8; dealer shows 9 (no insurance/peek). Split draws 3 then 4.
+  const shoe = pad([c('8'), c('9'), c('8'), c('7'), c('3'), c('4')]);
+  const room = new Room('SPL', { shoe });
+  const host = room.join({ name: 'Host', socketId: 's1' });
+  room.startGame(host.id);
+  room.placeBet(host.id, 25);
+  room.deal(host.id);
+
+  assert.equal(room.phase, 'playing');
+  room.act(host.id, { type: 'split' });
+
+  const seat = room.seats[0];
+  assert.equal(seat.hands.length, 2);
+  assert.ok(seat.hands.every((h) => h.fromSplit && h.cards.length === 2));
+  assert.equal(seat.hands[0].bet, 25);
+  assert.equal(seat.hands[1].bet, 25);
+  assert.equal(seat.chips, 700); // 750 − 25 initial − 25 for the split
+  assert.equal(room.active.seatIndex, 0); // still this seat's turn, first split hand
+});
+
+test('splitting into two 21s auto-stands both and the dealer still plays', () => {
+  // seat0 10,10; dealer 9,7=16; split draws A,A → two 21s; dealer then draws a 2 → 18.
+  const shoe = pad([c('10'), c('9'), c('10'), c('7'), c('A'), c('A'), c('2')]);
+  const room = new Room('S21', { shoe });
+  const host = room.join({ name: 'Host', socketId: 's1' });
+  room.startGame(host.id);
+  room.placeBet(host.id, 25);
+  room.deal(host.id);
+  room.act(host.id, { type: 'split' }); // no further action should be needed
+
+  assert.equal(room.phase, 'roundEnd');                 // both 21s auto-stood
+  assert.equal(room.dealer.cards.length, 3);            // dealer drew against the split 21s
+  assert.ok(room.seats[0].hands.every((h) => h.result === 'WIN'));
+});
+
 test('a banker who also plays shows a net equal to their real chip change', () => {
   // seat0 (banker) 7,K=17 and seat1 8,K=18 both lose to a dealer blackjack.
   const shoe = pad([c('7'), c('8'), c('A'), c('K'), c('K'), c('10')]);

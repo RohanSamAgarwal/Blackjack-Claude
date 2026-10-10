@@ -216,17 +216,21 @@ input:focus, select:focus { border-color: var(--gold); }
 .nohand { padding: 14px 0; text-align: center; }
 .hand { padding: 4px; border-radius: 8px; }
 .hand.active { background: rgba(212,175,55,.1); }
+.hand.win { animation: winGlow 1.3s ease-in-out 2; }
+@keyframes winGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(39,174,96,0); } 50% { box-shadow: 0 0 18px 2px rgba(39,174,96,.5); } }
+@keyframes chipDrop { 0% { transform: translateY(-26px) scale(.4) rotate(-12deg); opacity: 0; } 60% { transform: translateY(3px) scale(1.1); opacity: 1; } 100% { transform: none; } }
+@keyframes resultPop { 0% { transform: scale(0) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.18) rotate(2deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
 .hand-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; }
 .val { font-weight: 700; color: #fff; background: rgba(0,0,0,.5); padding: 1px 8px; border-radius: 8px; }
 .val.bust { background: rgba(192,57,43,.8); }
-.hbet { color: var(--gold-soft); }
-.res { font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 6px; }
+.hbet { color: #1a1a0e; background: linear-gradient(180deg,var(--gold-soft),var(--gold)); font-weight: 700; font-size: 11px; padding: 1px 8px; border-radius: 10px; animation: chipDrop .4s cubic-bezier(.34,1.56,.64,1) both; }
+.res { font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 6px; animation: resultPop .45s cubic-bezier(.34,1.56,.64,1) both; }
 .res.win { background: #1e4a2e; color: #b6f0c6; }
 .res.lose { background: #5a1e1e; color: #ffb4ab; }
 .res.push { background: #4a3a1e; color: #f0dca6; }
 .seat-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.06); }
 .seat-bottom .chips { color: var(--gold-soft); font-weight: 600; font-size: 13px; }
-.net { font-weight: 700; font-size: 13px; }
+.net { font-weight: 700; font-size: 13px; animation: resultPop .45s cubic-bezier(.34,1.56,.64,1) both; }
 .net.win { color: #7ee2a0; } .net.lose { color: #ff8f82; } .net.push { color: #f0dca6; }
 
 /* Controls */

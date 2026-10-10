@@ -24,8 +24,9 @@ function TurnClock({ deadline }) {
 }
 
 function HandView({ hand, tags, isActive, scale }) {
+  const won = hand.result === 'WIN' || hand.result === 'BLACKJACK';
   return (
-    <div className={`hand ${isActive ? 'active' : ''}`}>
+    <div className={`hand ${isActive ? 'active' : ''} ${won ? 'win' : ''}`}>
       <div className="hand-cards">
         {hand.cards.map((c, i) => <Card key={i} card={c} scale={scale} animate delay={i * 0.06} showTag={tags} />)}
       </div>
@@ -86,7 +87,10 @@ function BetBar({ state, actions, mySeat }) {
         ))}
         <button className="mini" onClick={() => actions.clearBet()}>Clear</button>
       </div>
-      <div className="bet-status">Your bet <b>${mySeat.bet}</b> · {mySeat.chips.toLocaleString()} chips</div>
+      <div className="bet-status">
+        Your bet <b>${mySeat.bet}</b> · {mySeat.chips.toLocaleString()} chips
+        <button className="mini" style={{ marginLeft: 10 }} onClick={() => actions.rebuy(state.settings.buyIn)}>+ Top up {state.settings.buyIn}</button>
+      </div>
       {state.you.isHost && <button className="btn" disabled={!anyBet} onClick={() => actions.deal()}>Deal</button>}
       {!state.you.isHost && <span className="muted small">Waiting for the host to deal…</span>}
     </div>

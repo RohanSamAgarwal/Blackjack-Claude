@@ -440,7 +440,10 @@ export class Room {
         second.cards = [c2, draw()];
         seat.hands.splice(handIndex + 1, 0, second);
         if (c1.rank === 'A') { hand.done = true; second.done = true; } // split aces: one card each
-        else if (handValue(hand.cards) === 21) hand.done = true;
+        else { // a dealt 21 auto-stands
+          if (handValue(hand.cards) === 21) hand.done = true;
+          if (handValue(second.cards) === 21) second.done = true;
+        }
         break;
       }
       case 'surrender': {
@@ -462,8 +465,11 @@ export class Room {
     this.dealer.revealed = true;
 
     const playingSeats = this.seats.filter((s) => s && s.bet > 0);
-    const anyLive = playingSeats.some((s) => s.hands.some((h) => !h.surrendered && handValue(h.cards) <= 21 && !isBlackjack(h.cards)));
-    // Dealer only draws if a non-busted, non-natural player hand remains.
+    // Dealer only draws if a non-busted, non-NATURAL player hand remains. A
+    // split 21 (isBlackjack but fromSplit) is NOT a natural, so it keeps the
+    // dealer in the hand.
+    const anyLive = playingSeats.some((s) => s.hands.some((h) =>
+      !h.surrendered && handValue(h.cards) <= 21 && !(isBlackjack(h.cards) && !h.fromSplit)));
     if (anyLive) {
       this.dealer.cards = playDealer(this.dealer.cards, () => this.shoe.draw(), { hitSoft17: this.settings.dealerHitsSoft17 });
     }
